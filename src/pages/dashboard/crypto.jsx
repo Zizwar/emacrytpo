@@ -23,7 +23,7 @@ const dummyWalletData = {
   ]
 };
 
-const BinanceWalletDashboard = () => {
+export function Crypto() {
   const [walletData, setWalletData] = useState(dummyWalletData);
 
   // في الواقع، هنا ستقوم بجلب البيانات من API بينانس
@@ -175,4 +175,3 @@ const BinanceWalletDashboard = () => {
   );
 };
 
-export default BinanceWalletDashboard;
