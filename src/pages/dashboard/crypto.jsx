@@ -1,471 +1,246 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { 
-  Typography, 
-  Card, 
-  CardHeader, 
-  CardBody, 
-  Tabs, 
-  TabsHeader, 
-  TabsBody, 
-  Tab, 
-  TabPanel,
-  Select,
-  Option,
-  Button,
-  Input,
-  Switch
+import React from "react";
+import {
+  Typography,
+  Card,
+  CardHeader,
+  CardBody,
+  IconButton,
+  Menu,
+  MenuHandler,
+  MenuList,
+  MenuItem,
+  Avatar,
+  Tooltip,
+  Progress,
 } from "@material-tailwind/react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  EllipsisVerticalIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  CurrencyDollarIcon,
+  ChartBarIcon,
+  CogIcon,
+  BellIcon,
+} from "@heroicons/react/24/outline";
+import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
-const translations = {
-  en: {
-    title: "Binance Trading Dashboard",
-    marketOverview: "Market Overview",
-    symbol: "Symbol",
-    price: "Price",
-    change24h: "24h Change",
-    volume24h: "24h Volume",
-    selectTradingPair: "Select Trading Pair",
-    priceChart: "Price Chart",
-    orderBook: "Order Book",
-    bids: "Bids",
-    asks: "Asks",
-    amount: "Amount",
-    total: "Total",
-    recentTrades: "Recent Trades",
-    time: "Time",
-    refreshInterval: "Refresh Interval",
-    priceAlerts: "Price Alerts",
-    alertPrice: "Alert Price",
-    alertAbove: "Alert Above",
-    alertBelow: "Alert Below",
-    activeAlerts: "Active Alerts",
-    language: "Language",
-    direction: "Direction"
-  },
-  ar: {
-    title: "لوحة تداول بينانس",
-    marketOverview: "نظرة عامة على السوق",
-    symbol: "الرمز",
-    price: "السعر",
-    change24h: "التغيير 24 ساعة",
-    volume24h: "الحجم 24 ساعة",
-    selectTradingPair: "اختر زوج التداول",
-    priceChart: "مخطط الأسعار",
-    orderBook: "سجل الطلبات",
-    bids: "العروض",
-    asks: "الطلبات",
-    amount: "الكمية",
-    total: "المجموع",
-    recentTrades: "آخر الصفقات",
-    time: "الوقت",
-    refreshInterval: "فترة التحديث",
-    priceAlerts: "تنبيهات الأسعار",
-    alertPrice: "سعر التنبيه",
-    alertAbove: "تنبيه فوق",
-    alertBelow: "تنبيه تحت",
-    activeAlerts: "التنبيهات النشطة",
-    language: "اللغة",
-    direction: "الاتجاه"
-  }
-};
+// Dummy data for the chart
+const cryptoData = [
+  { name: 'Jan', BTC: 4000, ETH: 2400, XRP: 2400 },
+  { name: 'Feb', BTC: 3000, ETH: 1398, XRP: 2210 },
+  { name: 'Mar', BTC: 2000, ETH: 9800, XRP: 2290 },
+  { name: 'Apr', BTC: 2780, ETH: 3908, XRP: 2000 },
+  { name: 'May', BTC: 1890, ETH: 4800, XRP: 2181 },
+  { name: 'Jun', BTC: 2390, ETH: 3800, XRP: 2500 },
+  { name: 'Jul', BTC: 3490, ETH: 4300, XRP: 2100 },
+];
 
-export function Crypto(){
-  const [tickerData, setTickerData] = useState([]);
-  const [selectedPair, setSelectedPair] = useState('BTCUSDT');
-  const [candlestickData, setCandlestickData] = useState([]);
-  const [orderBook, setOrderBook] = useState({ bids: [], asks: [] });
-  const [recentTrades, setRecentTrades] = useState([]);
-  const [refreshInterval, setRefreshInterval] = useState(60000);
-  const [alertPrice, setAlertPrice] = useState('');
-  const [alerts, setAlerts] = useState([]);
-  const [language, setLanguage] = useState('en');
-  const [isRTL, setIsRTL] = useState(false);
-
-  const t = translations[language];
-
-  useEffect(() => {
-    document.body.dir = isRTL ? 'rtl' : 'ltr';
-    document.body.lang = language;
-  }, [isRTL, language]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      await Promise.all([
-        fetchTickerData(),
-        fetchCandlestickData(),
-        fetchOrderBook(),
-        fetchRecentTrades()
-      ]);
-    };
-
-    fetchData();
-
-    const interval = setInterval(fetchData, refreshInterval);
-
-    return () => clearInterval(interval);
-  }, [selectedPair, refreshInterval]);
-
-  useEffect(() => {
-    const checkAlerts = () => {
-      const currentPrice = parseFloat(tickerData.find(t => t.symbol === selectedPair)?.lastPrice);
-      alerts.forEach(alert => {
-        if ((alert.type === 'above' && currentPrice > alert.price) ||
-            (alert.type === 'below' && currentPrice < alert.price)) {
-          alert(`Price Alert: ${selectedPair} is now ${currentPrice}`);
-          setAlerts(alerts.filter(a => a !== alert));
-        }
-      });
-    };
-
-    if (tickerData.length > 0) {
-      checkAlerts();
-    }
-  }, [tickerData, selectedPair, alerts]);
-
-  const fetchTickerData = async () => {
-    try {
-      const response = await axios.get('https://api.binance.com/api/v3/ticker/24hr');
-      setTickerData(response.data.slice(0, 10));
-    } catch (error) {
-      console.error('Error fetching ticker data:', error);
-    }
-  };
-
-  const fetchCandlestickData = async () => {
-    try {
-      const response = await axios.get(`https://api.binance.com/api/v3/klines`, {
-        params: {
-          symbol: selectedPair,
-          interval: '1h',
-          limit: 24
-        }
-      });
-      const formattedData = response.data.map(candle => ({
-        time: new Date(candle[0]).toLocaleTimeString(),
-        open: parseFloat(candle[1]),
-        high: parseFloat(candle[2]),
-        low: parseFloat(candle[3]),
-        close: parseFloat(candle[4])
-      }));
-      setCandlestickData(formattedData);
-    } catch (error) {
-      console.error('Error fetching candlestick data:', error);
-    }
-  };
-
-  const fetchOrderBook = async () => {
-    try {
-      const response = await axios.get(`https://api.binance.com/api/v3/depth`, {
-        params: {
-          symbol: selectedPair,
-          limit: 10
-        }
-      });
-      setOrderBook(response.data);
-    } catch (error) {
-      console.error('Error fetching order book:', error);
-    }
-  };
-
-  const fetchRecentTrades = async () => {
-    try {
-      const response = await axios.get(`https://api.binance.com/api/v3/trades`, {
-        params: {
-          symbol: selectedPair,
-          limit: 10
-        }
-      });
-      setRecentTrades(response.data);
-    } catch (error) {
-      console.error('Error fetching recent trades:', error);
-    }
-  };
-
-  const handleSetAlert = (type) => {
-    if (alertPrice) {
-      setAlerts([...alerts, { price: parseFloat(alertPrice), type }]);
-      setAlertPrice('');
-    }
-  };
-
+const CryptoDashboard = () => {
   return (
-    <div className={`p-4 bg-gray-100 min-h-screen ${isRTL ? 'rtl' : 'ltr'}`}>
-      <div className="flex justify-between items-center mb-4">
+    <div className="p-4 bg-gray-100 min-h-screen">
+      <div className="flex justify-between items-center mb-6">
         <Typography variant="h4" color="blue-gray">
-          {t.title}
+          Crypto Dashboard
         </Typography>
-        <div className="flex items-center gap-4">
-          <Select 
-            label={t.language} 
-            value={language} 
-            onChange={(value) => setLanguage(value)}
-          >
-            <Option value="en">English</Option>
-            <Option value="ar">العربية</Option>
-          </Select>
-          <Switch 
-            label={t.direction}
-            checked={isRTL}
-            onChange={() => setIsRTL(!isRTL)}
-          />
+        <div className="flex space-x-2">
+          <IconButton variant="text" color="blue-gray">
+            <BellIcon className="h-5 w-5" />
+          </IconButton>
+          <IconButton variant="text" color="blue-gray">
+            <CogIcon className="h-5 w-5" />
+          </IconButton>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        {/* Market Overview */}
-        <Card className="col-span-2">
-          <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
-            <Typography variant="h6" color="blue-gray">
-              {t.marketOverview}
-            </Typography>
-          </CardHeader>
-          <CardBody className="px-0 pt-0 pb-2">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] table-auto">
-                <thead>
-                  <tr>
-                    {[t.symbol, t.price, t.change24h, t.volume24h].map((el) => (
-                      <th key={el} className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                        <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                          {el}
-                        </Typography>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tickerData.map((ticker) => (
-                    <tr key={ticker.symbol} className="hover:bg-blue-gray-50/50 cursor-pointer" onClick={() => setSelectedPair(ticker.symbol)}>
-                      <td className="py-3 px-5 border-b border-blue-gray-50">
-                        <Typography variant="small" color="blue-gray" className="font-medium">
-                          {ticker.symbol}
-                        </Typography>
-                      </td>
-                      <td className="py-3 px-5 border-b border-blue-gray-50">
-                        <Typography variant="small" color="blue-gray" className="font-medium">
-                          ${parseFloat(ticker.lastPrice).toFixed(2)}
-                        </Typography>
-                      </td>
-                      <td className="py-3 px-5 border-b border-blue-gray-50">
-                        <Typography
-                          variant="small"
-                          className={`font-medium ${parseFloat(ticker.priceChangePercent) >= 0 ? 'text-green-500' : 'text-red-500'}`}
-                        >
-                          {parseFloat(ticker.priceChangePercent).toFixed(2)}%
-                        </Typography>
-                      </td>
-                      <td className="py-3 px-5 border-b border-blue-gray-50">
-                        <Typography variant="small" color="blue-gray" className="font-medium">
-                          ${parseFloat(ticker.volume).toLocaleString()}
-                        </Typography>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Pair Selector */}
-        <Card>
-          <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
-            <Typography variant="h6" color="blue-gray">
-              {t.selectTradingPair}
-            </Typography>
-          </CardHeader>
-          <CardBody>
-            <Select label={t.selectTradingPair} value={selectedPair} onChange={(value) => setSelectedPair(value)}>
-              {tickerData.map((ticker) => (
-                <Option key={ticker.symbol} value={ticker.symbol}>{ticker.symbol}</Option>
-              ))}
-            </Select>
-          </CardBody>
-        </Card>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          { title: "Bitcoin Price", value: "$34,567.89", change: "+5.67%", icon: CurrencyDollarIcon, color: "text-green-500" },
+          { title: "24h Volume", value: "$1.23B", change: "-2.34%", icon: ChartBarIcon, color: "text-red-500" },
+          { title: "Market Cap", value: "$645.78B", change: "+1.23%", icon: CurrencyDollarIcon, color: "text-green-500" },
+          { title: "Dominance", value: "42.3%", change: "+0.5%", icon: ChartBarIcon, color: "text-green-500" },
+        ].map((stat, index) => (
+          <Card key={index} className="overflow-hidden">
+            <CardBody className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Typography variant="small" color="blue-gray" className="mb-1 font-medium">
+                    {stat.title}
+                  </Typography>
+                  <Typography variant="h5" color="blue-gray">
+                    {stat.value}
+                  </Typography>
+                </div>
+                <div className={`rounded-full p-2 bg-blue-gray-50`}>
+                  {React.createElement(stat.icon, {
+                    className: "w-6 h-6 text-blue-gray-800",
+                  })}
+                </div>
+              </div>
+              <Typography variant="small" className={`flex items-center gap-1 font-normal ${stat.color}`}>
+                {stat.change.includes('+') ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />}
+                {stat.change}
+              </Typography>
+            </CardBody>
+          </Card>
+        ))}
       </div>
 
       {/* Price Chart */}
       <Card className="mb-6">
-        <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
-          <Typography variant="h6" color="blue-gray">
-            {t.priceChart} - {selectedPair}
-          </Typography>
+        <CardHeader floated={false} shadow={false} color="transparent" className="flex items-center justify-between p-4">
+          <div>
+            <Typography variant="h6" color="blue-gray">
+              Cryptocurrency Price Chart
+            </Typography>
+            <Typography variant="small" color="gray">
+              Last 7 days performance
+            </Typography>
+          </div>
+          <Menu placement="left-start">
+            <MenuHandler>
+              <IconButton variant="text" color="blue-gray">
+                <EllipsisVerticalIcon className="h-5 w-5" />
+              </IconButton>
+            </MenuHandler>
+            <MenuList>
+              <MenuItem>View Full Chart</MenuItem>
+              <MenuItem>Export Data</MenuItem>
+              <MenuItem>Settings</MenuItem>
+            </MenuList>
+          </Menu>
         </CardHeader>
         <CardBody>
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={candlestickData}>
+              <LineChart data={cryptoData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis domain={['auto', 'auto']} />
-                <Tooltip />
-                <Line type="monotone" dataKey="close" stroke="#8884d8" dot={false} />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <RechartsTooltip />
+                <Line type="monotone" dataKey="BTC" stroke="#FFA500" strokeWidth={2} />
+                <Line type="monotone" dataKey="ETH" stroke="#3B82F6" strokeWidth={2} />
+                <Line type="monotone" dataKey="XRP" stroke="#10B981" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </CardBody>
       </Card>
 
-      {/* Order Book and Recent Trades */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <Card>
-          <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
-            <Typography variant="h6" color="blue-gray">
-              {t.orderBook}
-            </Typography>
-          </CardHeader>
-          <CardBody className="px-0 pt-0 pb-2">
-            <Tabs value="bids">
-              <TabsHeader>
-                <Tab value="bids">{t.bids}</Tab>
-                <Tab value="asks">{t.asks}</Tab>
-              </TabsHeader>
-              <TabsBody>
-                <TabPanel value="bids">
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[400px] table-auto">
-                      <thead>
-                        <tr>
-                          {[t.price, t.amount, t.total].map((el) => (
-                            <th key={el} className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                              <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                                {el}
-                              </Typography>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {orderBook.bids.slice(0, 10).map((bid, index) => (
-                          <tr key={index}>
-                            <td className="py-3 px-5 border-b border-blue-gray-50">
-                              <Typography variant="small" color="green" className="font-medium">
-                                {parseFloat(bid[0]).toFixed(2)}
-                              </Typography>
-                            </td>
-                            <td className="py-3 px-5 border-b border-blue-gray-50">
-                              <Typography variant="small" color="blue-gray" className="font-medium">
-                                {parseFloat(bid[1]).toFixed(4)}
-                              </Typography>
-                            </td>
-                            <td className="py-3 px-5 border-b border-blue-gray-50">
-                              <Typography variant="small" color="blue-gray" className="font-medium">
-                                {(parseFloat(bid[0]) * parseFloat(bid[1])).toFixed(2)}
-                              </Typography>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </TabPanel>
-                <TabPanel value="asks">
-                  {/* Similar structure as bids, but for asks */}
-                </TabPanel>
-              </TabsBody>
-            </Tabs>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
-            <Typography variant="h6" color="blue-gray">
-              {t.recentTrades}
-            </Typography>
-          </CardHeader>
-          <CardBody className="px-0 pt-0 pb-2">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[400px] table-auto">
-                <thead>
-                  <tr>
-                    {[t.price, t.amount, t.time].map((el) => (
-                      <th key={el} className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                        <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                          {el}
-                        </Typography>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentTrades.map((trade) => (
-                    <tr key={trade.id}>
-                      <td className="py-3 px-5 border-b border-blue-gray-50">
-                        <Typography variant="small" color={trade.isBuyerMaker ? "red" : "green"} className="font-medium">
-                          {parseFloat(trade.price).toFixed(2)}
-                        </Typography>
-                      </td>
-                      <td className="py-3 px-5 border-b border-blue-gray-50">
-                        <Typography variant="small" color="blue-gray" className="font-medium">
-                          {parseFloat(trade.qty).toFixed(4)}
-                        </Typography>
-                      </td>
-                      <td className="py-3 px-5 border-b border-blue-gray-50">
-                        <Typography variant="small" color="blue-gray" className="font-medium">
-                          {new Date(trade.time).toLocaleTimeString()}
-                        </Typography>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
-
-      {/* Refresh Interval Selector */}
-      <Card className="mt-6">
-        <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
+      {/* Top Cryptocurrencies */}
+      <Card className="mb-6">
+        <CardHeader floated={false} shadow={false} color="transparent" className="flex items-center justify-between p-4">
           <Typography variant="h6" color="blue-gray">
-            Refresh Interval
+            Top Cryptocurrencies
+          </Typography>
+          <Typography variant="small" color="gray" className="flex items-center gap-1">
+            <ClockIcon className="h-4 w-4 text-blue-gray-400" />
+            Updated 5 mins ago
           </Typography>
         </CardHeader>
-        <CardBody>
-          <Select 
-            label="Refresh Interval" 
-            value={refreshInterval.toString()} 
-            onChange={(value) => setRefreshInterval(parseInt(value))}
-          >
-            <Option value="30000">30 seconds</Option>
-            <Option value="60000">1 minute</Option>
-            <Option value="300000">5 minutes</Option>
-          </Select>
+        <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
+          <table className="w-full min-w-[640px] table-auto">
+            <thead>
+              <tr>
+                {["Rank", "Name", "Price", "24h Change", "Market Cap", "Volume (24h)"].map((el) => (
+                  <th key={el} className="border-b border-blue-gray-50 py-3 px-6 text-left">
+                    <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
+                      {el}
+                    </Typography>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { rank: 1, name: "Bitcoin", symbol: "BTC", price: "$34,567.89", change: "+5.67%", marketCap: "$645.78B", volume: "$28.45B" },
+                { rank: 2, name: "Ethereum", symbol: "ETH", price: "$2,345.67", change: "+3.21%", marketCap: "$274.56B", volume: "$15.78B" },
+                { rank: 3, name: "Cardano", symbol: "ADA", price: "$1.23", change: "-2.34%", marketCap: "$39.45B", volume: "$2.67B" },
+                { rank: 4, name: "Binance Coin", symbol: "BNB", price: "$345.67", change: "+1.23%", marketCap: "$58.90B", volume: "$1.89B" },
+                { rank: 5, name: "XRP", symbol: "XRP", price: "$0.78", change: "-0.56%", marketCap: "$36.12B", volume: "$3.45B" },
+              ].map((coin, index) => (
+                <tr key={coin.name}>
+                  <td className="py-3 px-5 border-b border-blue-gray-50">
+                    <Typography variant="small" color="blue-gray" className="font-medium">
+                      {coin.rank}
+                    </Typography>
+                  </td>
+                  <td className="py-3 px-5 border-b border-blue-gray-50">
+                    <div className="flex items-center gap-4">
+                      <Avatar src={`https://cryptologos.cc/logos/${coin.name.toLowerCase()}-${coin.symbol.toLowerCase()}-logo.png`} alt={coin.name} size="sm" />
+                      <div>
+                        <Typography variant="small" color="blue-gray" className="font-medium">
+                          {coin.name}
+                        </Typography>
+                        <Typography variant="small" color="gray" className="font-normal">
+                          {coin.symbol}
+                        </Typography>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-5 border-b border-blue-gray-50">
+                    <Typography variant="small" color="blue-gray" className="font-medium">
+                      {coin.price}
+                    </Typography>
+                  </td>
+                  <td className="py-3 px-5 border-b border-blue-gray-50">
+                    <Typography
+                      variant="small"
+                      className={`font-medium ${coin.change.includes('+') ? 'text-green-500' : 'text-red-500'}`}
+                    >
+                      {coin.change}
+                    </Typography>
+                  </td>
+                  <td className="py-3 px-5 border-b border-blue-gray-50">
+                    <Typography variant="small" color="blue-gray" className="font-medium">
+                      {coin.marketCap}
+                    </Typography>
+                  </td>
+                  <td className="py-3 px-5 border-b border-blue-gray-50">
+                    <Typography variant="small" color="blue-gray" className="font-medium">
+                      {coin.volume}
+                    </Typography>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </CardBody>
       </Card>
 
-      {/* Price Alerts */}
-      <Card className="mt-6">
-        <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
+      {/* Market Sentiment */}
+      <Card>
+        <CardHeader floated={false} shadow={false} color="transparent" className="flex items-center justify-between p-4">
           <Typography variant="h6" color="blue-gray">
-            Price Alerts
+            Market Sentiment
           </Typography>
         </CardHeader>
         <CardBody>
-          <div className="flex items-center gap-4">
-            <Input 
-              type="number" 
-              label="Alert Price" 
-              value={alertPrice} 
-              onChange={(e) => setAlertPrice(e.target.value)}
-            />
-            <Button onClick={() => handleSetAlert('above')}>Alert Above</Button>
-            <Button onClick={() => handleSetAlert('below')}>Alert Below</Button>
+          <div className="flex justify-between items-center mb-2">
+            <Typography variant="small" color="blue-gray">Fear & Greed Index</Typography>
+            <Typography variant="small" color="green" className="font-medium">65 - Greed</Typography>
           </div>
-          <div className="mt-4">
-            <Typography variant="h6" color="blue-gray">
-              Active Alerts:
-            </Typography>
-            {alerts.map((alert, index) => (
-              <Typography key={index} variant="small" color="blue-gray">
-                {alert.type.charAt(0).toUpperCase() + alert.type.slice(1)} {alert.price}
-              </Typography>
+          <Progress value={65} color="green" className="h-1" />
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { label: "Buy", value: 65, color: "green" },
+              { label: "Hold", value: 20, color: "blue" },
+              { label: "Sell", value: 15, color: "red" },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="flex justify-between items-center mb-2">
+                  <Typography variant="small" color="blue-gray">{item.label}</Typography>
+                  <Typography variant="small" color={item.color} className="font-medium">{item.value}%</Typography>
+                </div>
+                <Progress value={item.value} color={item.color} className="h-1" />
+              </div>
             ))}
           </div>
         </CardBody>
       </Card>
-      </div> 
+    </div>
   );
 };
+
+export default CryptoDashboard;
