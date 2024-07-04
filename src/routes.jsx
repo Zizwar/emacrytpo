@@ -6,7 +6,7 @@ import {
   ServerStackIcon,
   RectangleStackIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications ,Crypto} from "@/pages/dashboard";
+import { Home, Profile, Tables, Notifications ,Crypto, SignalsDisplay} from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 
 const icon = {
@@ -27,6 +27,12 @@ export const routes = [
         name: "crypto",
         path: "/crypto",
         element: <Crypto />,
+      },
+{
+        icon: <UserCircleIcon {...icon} />,
+        name: "Signals Display",
+        path: "/signal-display",
+        element: <SignalsDisplay />,
       },
       {
         icon: <UserCircleIcon {...icon} />,
