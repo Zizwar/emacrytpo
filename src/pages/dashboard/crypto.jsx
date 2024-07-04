@@ -14,7 +14,7 @@ const cryptoPairs = ["BTC/USDT", "ETH/USDT", "BNB/USDT", "ADA/USDT", "XRP/USDT"]
 const timeframes = ["5m", "15m", "1h", "4h", "1d"];
 const strategies = ["EMA Cross", "RSI Oversold/Overbought", "MACD Crossover", "Bollinger Bands Squeeze"];
 
-export default function Crypto() {
+export function Crypto() {
   const [recommendation, setRecommendation] = useState({
     pair: "",
     timeframe: "",
