@@ -1,14 +1,13 @@
 {
-  "routes": [
-    {
-      "path": "/",
-      "methods": ["GET"],
-      "script": "index.html"
-    },
-    {
-      "path": "/(.*)",
-      "methods": ["GET"],
-      "script": "index.html"
-    }
-  ]
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom": "https://esm.sh/react-dom@18.2.0"
+  },
+  "tasks": {
+    "start": "deno run --allow-net --allow-read --allow-env server.ts"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  }
 }
