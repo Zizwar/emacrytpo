@@ -1,0 +1,14 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "methods": ["GET"],
+      "script": "index.html"
+    },
+    {
+      "path": "/(.*)",
+      "methods": ["GET"],
+      "script": "index.html"
+    }
+  ]
+}
