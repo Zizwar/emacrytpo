@@ -16,7 +16,7 @@ const dummyRecommendations = [
   { id: 3, pair: "BNB/USDT", timeframe: "1d", strategy: "MACD Crossover", entryPrice: 300, stopLoss: 290, takeProfit: 320, status: "مغلقة (خسارة)", createdAt: "2024-07-02 09:00:00" },
 ];
 
-export default function SignalsDisplay() {
+export function SignalsDisplay() {
   const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
