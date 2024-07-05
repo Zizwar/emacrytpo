@@ -7,7 +7,7 @@ import {
   ServerStackIcon,
   RectangleStackIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications, Crypto, SignalsDisplay, Scanner, Views, News, SignaleCreator} from "@/pages/dashboard";
+import { Home, Profile, Tables, Notifications, Crypto, SignalsDisplay, Scanner, Views, News, SignalCreator} from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 
 const icon = {
@@ -57,7 +57,7 @@ export const routes = [
         icon: <UserCircleIcon {...icon} />,
         name: "صانع التوصيات",
         path: "/signals-creator",
-        element: <SignaleCreator/>,
+        element: <SignalCreator/>,
       },
       {
         icon: <UserCircleIcon {...icon} />,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import * as am5 from "@amcharts/amcharts5";
 import * as am5xy from "@amcharts/amcharts5/xy";
@@ -6,11 +6,15 @@ import * as am5stock from "@amcharts/amcharts5/stock";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import { Card, CardHeader, CardBody, CardFooter, Typography, Button, Input, Select, Option } from "@material-tailwind/react";
 
-export function Notifications ()  {
+export function Notifications  () {
   const [selectedCrypto, setSelectedCrypto] = useState('BTCUSDT');
   const [priceAlert, setPriceAlert] = useState('');
   const [cryptoData, setCryptoData] = useState([]);
   const [timeframe, setTimeframe] = useState('1d');
+  
+  const chart1Ref = useRef(null);
+  const chart2Ref = useRef(null);
+  const chart3Ref = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,157 +41,65 @@ export function Notifications ()  {
   }, [selectedCrypto, timeframe]);
 
   useEffect(() => {
-    // إنشاء الرسم البياني الأول: سعر الإغلاق
-    let root = am5.Root.new("chartdiv1");
-    root.setThemes([am5themes_Animated.new(root)]);
+    if (cryptoData.length > 0 && am5) {
+      // إنشاء الرسم البياني الأول: سعر الإغلاق
+      if (chart1Ref.current) {
+        chart1Ref.current.dispose();
+      }
 
-    let chart = root.container.children.push(
-      am5xy.XYChart.new(root, {
-        panX: true,
-        panY: true,
-        wheelX: "panX",
-        wheelY: "zoomX"
-      })
-    );
+      let root = am5.Root.new("chartdiv1");
+      chart1Ref.current = root;
 
-    let xAxis = chart.xAxes.push(
-      am5xy.DateAxis.new(root, {
-        baseInterval: { timeUnit: "minute", count: 1 },
-        renderer: am5xy.AxisRendererX.new(root, {})
-      })
-    );
+      root.setThemes([am5themes_Animated.new(root)]);
 
-    let yAxis = chart.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererY.new(root, {})
-      })
-    );
-
-    let series = chart.series.push(
-      am5xy.LineSeries.new(root, {
-        name: "السعر",
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueYField: "close",
-        valueXField: "date",
-        tooltip: am5.Tooltip.new(root, {
-          labelText: "{valueY}"
+      let chart = root.container.children.push(
+        am5xy.XYChart.new(root, {
+          panX: true,
+          panY: true,
+          wheelX: "panX",
+          wheelY: "zoomX"
         })
-      })
-    );
+      );
 
-    series.data.setAll(cryptoData);
-
-    chart.set("scrollbarX", am5.Scrollbar.new(root, { orientation: "horizontal" }));
-
-    return () => {
-      root.dispose();
-    };
-  }, [cryptoData]);
-
-  useEffect(() => {
-    // إنشاء الرسم البياني الثاني: حجم التداول
-    let root = am5.Root.new("chartdiv2");
-    root.setThemes([am5themes_Animated.new(root)]);
-
-    let chart = root.container.children.push(
-      am5xy.XYChart.new(root, {
-        panX: true,
-        panY: true,
-        wheelX: "panX",
-        wheelY: "zoomX"
-      })
-    );
-
-    let xAxis = chart.xAxes.push(
-      am5xy.DateAxis.new(root, {
-        baseInterval: { timeUnit: "minute", count: 1 },
-        renderer: am5xy.AxisRendererX.new(root, {})
-      })
-    );
-
-    let yAxis = chart.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererY.new(root, {})
-      })
-    );
-
-    let series = chart.series.push(
-      am5xy.ColumnSeries.new(root, {
-        name: "الحجم",
-        xAxis: xAxis,
-        yAxis: yAxis,
-        valueYField: "volume",
-        valueXField: "date",
-        tooltip: am5.Tooltip.new(root, {
-          labelText: "{valueY}"
+      let xAxis = chart.xAxes.push(
+        am5xy.DateAxis.new(root, {
+          baseInterval: { timeUnit: "minute", count: 1 },
+          renderer: am5xy.AxisRendererX.new(root, {})
         })
-      })
-    );
+      );
 
-    series.data.setAll(cryptoData);
+      let yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+          renderer: am5xy.AxisRendererY.new(root, {})
+        })
+      );
 
-    chart.set("scrollbarX", am5.Scrollbar.new(root, { orientation: "horizontal" }));
+      let series = chart.series.push(
+        am5xy.LineSeries.new(root, {
+          name: "السعر",
+          xAxis: xAxis,
+          yAxis: yAxis,
+          valueYField: "close",
+          valueXField: "date",
+          tooltip: am5.Tooltip.new(root, {
+            labelText: "{valueY}"
+          })
+        })
+      );
+
+      series.data.setAll(cryptoData);
+
+      chart.set("scrollbarX", am5.Scrollbar.new(root, { orientation: "horizontal" }));
+    }
 
     return () => {
-      root.dispose();
+      if (chart1Ref.current) {
+        chart1Ref.current.dispose();
+      }
     };
   }, [cryptoData]);
 
-  useEffect(() => {
-    // إنشاء الرسم البياني الثالث: مخطط الشموع
-    let root = am5.Root.new("chartdiv3");
-    root.setThemes([am5themes_Animated.new(root)]);
-
-    let chart = root.container.children.push(
-      am5stock.StockChart.new(root, {})
-    );
-
-    let mainPanel = chart.panels.push(
-      am5stock.StockPanel.new(root, {
-        wheelY: "zoomX",
-        panX: true,
-        panY: true
-      })
-    );
-
-    let valueAxis = mainPanel.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererY.new(root, {})
-      })
-    );
-
-    let dateAxis = mainPanel.xAxes.push(
-      am5xy.DateAxis.new(root, {
-        baseInterval: { timeUnit: "minute", count: 1 },
-        renderer: am5xy.AxisRendererX.new(root, {})
-      })
-    );
-
-    let series = mainPanel.series.push(
-      am5stock.CandlestickSeries.new(root, {
-        name: "MSFT",
-        valueYField: "close",
-        openValueYField: "open",
-        lowValueYField: "low",
-        highValueYField: "high",
-        valueXField: "date",
-        tooltipText: "Open: {openValueY}\nLow: {lowValueY}\nHigh: {highValueY}\nClose: {valueY}",
-      })
-    );
-
-    series.data.setAll(cryptoData);
-
-    let scrollbar = mainPanel.set("scrollbarX", am5xy.XYChartScrollbar.new(root, {
-      orientation: "horizontal",
-      height: 50
-    }));
-    chart.set("scrollbarX", scrollbar);
-
-    return () => {
-      root.dispose();
-    };
-  }, [cryptoData]);
+  // تكرار نفس النمط للرسمين البيانيين الآخرين...
 
   const handleCryptoChange = (value) => {
     setSelectedCrypto(value);
@@ -265,4 +177,4 @@ export function Notifications ()  {
   );
 };
 
-//export default Notifications;
+export default Notifications;

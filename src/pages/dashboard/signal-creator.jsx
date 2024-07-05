@@ -9,17 +9,12 @@ import {
   Option,
   Button,
 } from "@material-tailwind/react";
-import TelegramBot from 'node-telegram-bot-api';
 
 const cryptoPairs = ["BTC/USDT", "ETH/USDT", "BNB/USDT", "ADA/USDT", "XRP/USDT"];
-const timeframes = ["5m", "15m", "1h", "4h", "1d"];
-const strategies = ["EMA Cross", "RSI Oversold/Overbought", "MACD Crossover", "Bollinger Bands Squeeze"];
+const timeframes = ["5م", "15م", "1س", "4س", "1ي"];
+const strategies = ["تقاطع المتوسطات المتحركة", "مؤشر القوة النسبية", "تقاطع MACD", "انكماش بولينجر"];
 
-// إعداد بوت التيليغرام
-const telegramBot = new TelegramBot('6916562215:AAGlHgtBpzEXBFqdDnHrErtNUFHRhSTTjYk');
-const chatId = "-1002105118803";
-
-export function SignaleCreator() {
+export  function SignalCreator() {
   const [recommendation, setRecommendation] = useState({
     pair: "",
     timeframe: "",
@@ -29,6 +24,8 @@ export function SignaleCreator() {
     takeProfit: "",
     notes: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,38 +33,35 @@ export function SignaleCreator() {
   };
 
   const sendToTelegram = async (recommendation) => {
-    const message = `
-🚀 توصية جديدة! 🚀
-
-🔸 الزوج: ${recommendation.pair}
-⏱️ الإطار الزمني: ${recommendation.timeframe}
-📊 الاستراتيجية: ${recommendation.strategy}
-
-💹 سعر الدخول: ${recommendation.entryPrice}
-🛑 وقف الخسارة: ${recommendation.stopLoss}
-🎯 هدف الربح: ${recommendation.takeProfit}
-
-📝 ملاحظات:
-${recommendation.notes}
-
-⚠️ تذكير: هذه التوصية للأغراض التعليمية فقط. يرجى إجراء البحث الخاص بك قبل اتخاذ أي قرارات استثمارية.
-
-🍀 حظاً موفقاً وتداولاً آمناً! 🍀
-    `;
+    setIsLoading(true);
 
     try {
-      await telegramBot.sendMessage(chatId, message);
-      console.log('تم إرسال التوصية بنجاح إلى تيليغرام');
+          recommendation.createdAt =new Date().toISOString();
+      const response = await fetch('/api/send-telegram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(recommendation),
+      });
+      
+      if (!response.ok) {
+        throw new Error('فشل في إرسال التوصية');
+      }
+
+
+
+      setMessage('تم إرسال التوصية بنجاح!');
     } catch (error) {
-      console.error('حدث خطأ أثناء إرسال التوصية إلى تيليغرام:', error);
+      console.error('خطأ:', error);
+      setMessage('حدث خطأ أثناء إرسال التوصية.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("تم إنشاء التوصية:", recommendation);
-    
-    // إرسال التوصية إلى تيليغرام
     await sendToTelegram(recommendation);
     
     // إعادة تعيين النموذج
@@ -80,9 +74,6 @@ ${recommendation.notes}
       takeProfit: "",
       notes: "",
     });
-
-    // يمكنك إضافة رسالة نجاح هنا
-    alert('تم إنشاء التوصية وإرسالها بنجاح إلى تيليغرام!');
   };
 
   return (
@@ -91,7 +82,7 @@ ${recommendation.notes}
         إنشاء توصية جديدة
       </Typography>
 
-      <Card>
+      <Card dir="rtl">
         <CardHeader floated={false} shadow={false} color="transparent" className="m-0 p-6">
           <Typography variant="h5" color="blue-gray">
             تفاصيل التوصية
@@ -171,8 +162,15 @@ ${recommendation.notes}
                 onChange={handleChange}
               />
             </div>
-            <Button type="submit" className="mt-4">إنشاء وإرسال التوصية</Button>
+            <Button type="submit" className="mt-4" disabled={isLoading}>
+              {isLoading ? 'جاري الإرسال...' : 'إنشاء وإرسال التوصية'}
+            </Button>
           </form>
+          {message && (
+            <Typography color={message.includes('نجاح') ? 'green' : 'red'} className="mt-4">
+              {message}
+            </Typography>
+          )}
         </CardBody>
       </Card>
     </div>

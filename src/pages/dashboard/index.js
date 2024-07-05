@@ -8,4 +8,4 @@ export * from "@/pages/dashboard/scanner";
 //export * from "@/pages/dashboard/charts";
 export * from "@/pages/dashboard/views";
 export * from "@/pages/dashboard/news";
-export * from "@/pages/dashboard/create-signal";
+export * from "@/pages/dashboard/signal-creator";
