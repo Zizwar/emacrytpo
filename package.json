@@ -21,7 +21,7 @@
     "react-dom": "18.2.0",
     "react-router-dom": "6.17.0",
     "recharts": "^2.12.7",
-    "react-ts-tradingview-widgets":"1.2.5",
+   "node-telegram-bot-api":"0.66.0", "react-ts-tradingview-widgets":"1.2.5",
     "lucide-react":"0.400.0"
   },
   "devDependencies": {
