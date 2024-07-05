@@ -3,7 +3,7 @@ import { AdvancedRealTimeChart, TechnicalAnalysis, MarketOverview, TickerTape, E
 import { Card, CardHeader, CardBody, Typography } from "@material-tailwind/react";
 
 const ChartCard = ({ title, children }) => (
-  <Card className="w-full lg:w-1/2 p-4 m-2">
+  <Card className="w-full  p-4 m-2">
     <CardHeader color="blue" className="p-2">
       <Typography variant="h6" color="white">
         {title}
@@ -15,11 +15,17 @@ const ChartCard = ({ title, children }) => (
 
 export function Views() {
   return (
-    <div className="flex flex-wrap justify-center">
+    <div className="flex  flex-wrap justify-center">
+         <div className="w-full p-4">
+        <Typography variant="h6" className="mb-2">شريط الأسعار</Typography>
+        <TickerTape colorTheme="light" locale="ar" />
+      </div>
+
       <ChartCard title="الرسم البياني المتقدم في الوقت الحقيقي">
         <AdvancedRealTimeChart 
           theme="light"
-          symbol="NASDAQ:AAPL"
+          symbol="BINANCE:BTCUSDT"
+          width="100%"
           interval="D"
           timezone="Etc/UTC"
           style="1"
@@ -35,7 +41,7 @@ export function Views() {
       <ChartCard title="التحليل الفني">
         <TechnicalAnalysis
           colorTheme="light"
-          symbol="NASDAQ:AAPL"
+          symbol="BINANCE:BTCUSDT"
           showIntervalTabs={true}
           locale="ar"
           width="100%"
@@ -53,11 +59,7 @@ export function Views() {
         />
       </ChartCard>
 
-      <div className="w-full p-4">
-        <Typography variant="h6" className="mb-2">شريط الأسعار</Typography>
-        <TickerTape colorTheme="light" locale="ar" />
-      </div>
-
+   
       <ChartCard title="التقويم الاقتصادي">
         <EconomicCalendar
           colorTheme="light"

@@ -64,11 +64,18 @@ export function Crypto() {
   const fetchTickerData = async () => {
     try {
       const response = await axios.get('https://api.binance.com/api/v3/ticker/24hr');
-      setTickerData(response.data.slice(0, 10));
+      // Filter pairs that have USDT as the base or quote asset
+      const usdtPairs = response.data.filter(pair =>
+        pair.symbol.endsWith('USDT') || pair.symbol.startsWith('USDT')
+      );
+      // Take the first 20 pairs
+      const top20UsdtPairs = usdtPairs.slice(0, 10);
+      setTickerData(top20UsdtPairs);
     } catch (error) {
       console.error('خطأ في جلب بيانات السوق:', error);
     }
   };
+  
 
   const fetchCandlestickData = async () => {
     try {
