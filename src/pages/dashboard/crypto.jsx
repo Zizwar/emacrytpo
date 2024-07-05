@@ -50,7 +50,7 @@ export function Crypto() {
       alerts.forEach(alert => {
         if ((alert.type === 'above' && currentPrice > alert.price) ||
             (alert.type === 'below' && currentPrice < alert.price)) {
-          alert(`Price Alert: ${selectedPair} is now ${currentPrice}`);
+          alert(`تنبيه السعر: ${selectedPair} الآن ${currentPrice}`);
           setAlerts(alerts.filter(a => a !== alert));
         }
       });
@@ -66,7 +66,7 @@ export function Crypto() {
       const response = await axios.get('https://api.binance.com/api/v3/ticker/24hr');
       setTickerData(response.data.slice(0, 10));
     } catch (error) {
-      console.error('Error fetching ticker data:', error);
+      console.error('خطأ في جلب بيانات السوق:', error);
     }
   };
 
@@ -88,7 +88,7 @@ export function Crypto() {
       }));
       setCandlestickData(formattedData);
     } catch (error) {
-      console.error('Error fetching candlestick data:', error);
+      console.error('خطأ في جلب بيانات الشموع:', error);
     }
   };
 
@@ -102,7 +102,7 @@ export function Crypto() {
       });
       setOrderBook(response.data);
     } catch (error) {
-      console.error('Error fetching order book:', error);
+      console.error('خطأ في جلب دفتر الأوامر:', error);
     }
   };
 
@@ -116,7 +116,7 @@ export function Crypto() {
       });
       setRecentTrades(response.data);
     } catch (error) {
-      console.error('Error fetching recent trades:', error);
+      console.error('خطأ في جلب التداولات الحديثة:', error);
     }
   };
 
@@ -128,17 +128,17 @@ export function Crypto() {
   };
 
   return (
-    <div className="p-4 bg-gray-100 min-h-screen">
-      <Typography variant="h4" color="blue-gray" className="mb-4">
-        Binance Trading Dashboard
+    <div className="p-4 bg-gray-100 min-h-screen " >
+      <Typography variant="h4" color="blue-gray" className="mb-4 text-right">
+        لوحة تداول Binance
       </Typography>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        {/* Market Overview */}
+        {/* نظرة عامة على السوق */}
         <Card className="col-span-2">
           <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
-            <Typography variant="h6" color="blue-gray">
-              Market Overview
+            <Typography variant="h6" color="blue-gray" className="text-right">
+              نظرة عامة على السوق
             </Typography>
           </CardHeader>
           <CardBody className="px-0 pt-0 pb-2">
@@ -146,7 +146,7 @@ export function Crypto() {
               <table className="w-full min-w-[640px] table-auto">
                 <thead>
                   <tr>
-                    {["Symbol", "Price", "24h Change", "24h Volume"].map((el) => (
+                    {["الرمز", "السعر", "التغيير خلال 24 ساعة", "حجم التداول خلال 24 ساعة"].map((el) => (
                       <th key={el} className="border-b border-blue-gray-50 py-3 px-6 text-left">
                         <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
                           {el}
@@ -189,15 +189,15 @@ export function Crypto() {
           </CardBody>
         </Card>
 
-        {/* Pair Selector */}
+        {/* اختيار زوج التداول */}
         <Card>
-          <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
+          <CardHeader floated={false} shadow={false} color="transparent" className="p-4 text-right">
             <Typography variant="h6" color="blue-gray">
-              Select Trading Pair
+              اختيار زوج التداول
             </Typography>
           </CardHeader>
           <CardBody>
-            <Select label="Trading Pair" value={selectedPair} onChange={(value) => setSelectedPair(value)}>
+            <Select label="زوج التداول" value={selectedPair} onChange={(value) => setSelectedPair(value)}>
               {tickerData.map((ticker) => (
                 <Option key={ticker.symbol} value={ticker.symbol}>{ticker.symbol}</Option>
               ))}
@@ -206,11 +206,11 @@ export function Crypto() {
         </Card>
       </div>
 
-      {/* Price Chart */}
+      {/* مخطط الأسعار */}
       <Card className="mb-6">
-        <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
+        <CardHeader floated={false} shadow={false} color="transparent" className="p-4 text-right">
           <Typography variant="h6" color="blue-gray">
-            Price Chart - {selectedPair}
+            مخطط الأسعار - {selectedPair}
           </Typography>
         </CardHeader>
         <CardBody>
@@ -228,28 +228,28 @@ export function Crypto() {
         </CardBody>
       </Card>
 
-      {/* Order Book and Recent Trades */}
+      {/* دفتر الأوامر والتداولات الحديثة */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <Card>
-          <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
+          <CardHeader floated={false} shadow={false} color="transparent" className="p-4 text-right">
             <Typography variant="h6" color="blue-gray">
-              Order Book
+              دفتر الأوامر
             </Typography>
           </CardHeader>
           <CardBody className="px-0 pt-0 pb-2">
             <Tabs value="bids">
               <TabsHeader>
-                <Tab value="bids">Bids</Tab>
-                <Tab value="asks">Asks</Tab>
+                <Tab value="bids">العروض</Tab>
+                <Tab value="asks">الطلبات</Tab>
               </TabsHeader>
               <TabsBody>
                 <TabPanel value="bids">
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[400px] table-auto">
+                    <table className="w-full min-w-[640px] table-auto">
                       <thead>
                         <tr>
-                          {["Price", "Amount", "Total"].map((el) => (
-                            <th key={el} className="border-b border-blue-gray-50 py-3 px-6 text-left">
+                          {["السعر", "الكمية", "الإجمالي"].map((el) => (
+                            <th key={el} className="border-b border-blue-gray-50 py-3 px-5 text-left">
                               <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
                                 {el}
                               </Typography>
@@ -258,21 +258,21 @@ export function Crypto() {
                         </tr>
                       </thead>
                       <tbody>
-                        {orderBook.bids.slice(0, 10).map((bid, index) => (
-                          <tr key={index}>
+                        {orderBook.bids.map((bid, index) => (
+                          <tr key={index} className="hover:bg-blue-gray-50/50 cursor-pointer">
                             <td className="py-3 px-5 border-b border-blue-gray-50">
-                              <Typography variant="small" color="green" className="font-medium">
+                              <Typography variant="small" color="blue-gray" className="font-medium">
                                 {parseFloat(bid[0]).toFixed(2)}
                               </Typography>
                             </td>
                             <td className="py-3 px-5 border-b border-blue-gray-50">
                               <Typography variant="small" color="blue-gray" className="font-medium">
-                                {parseFloat(bid[1]).toFixed(4)}
+                                {parseFloat(bid[1]).toFixed(2)}
                               </Typography>
                             </td>
                             <td className="py-3 px-5 border-b border-blue-gray-50">
                               <Typography variant="small" color="blue-gray" className="font-medium">
-                                {(parseFloat(bid[0]) * parseFloat(bid[1])).toFixed(2)}
+                                ${(parseFloat(bid[0]) * parseFloat(bid[1])).toFixed(2)}
                               </Typography>
                             </td>
                           </tr>
@@ -283,11 +283,11 @@ export function Crypto() {
                 </TabPanel>
                 <TabPanel value="asks">
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[400px] table-auto">
+                    <table className="w-full min-w-[640px] table-auto">
                       <thead>
                         <tr>
-                          {["Price", "Amount", "Total"].map((el) => (
-                            <th key={el} className="border-b border-blue-gray-50 py-3 px-6 text-left">
+                          {["السعر", "الكمية", "الإجمالي"].map((el) => (
+                            <th key={el} className="border-b border-blue-gray-50 py-3 px-5 text-left">
                               <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
                                 {el}
                               </Typography>
@@ -296,21 +296,21 @@ export function Crypto() {
                         </tr>
                       </thead>
                       <tbody>
-                        {orderBook.asks.slice(0, 10).map((ask, index) => (
-                          <tr key={index}>
+                        {orderBook.asks.map((ask, index) => (
+                          <tr key={index} className="hover:bg-blue-gray-50/50 cursor-pointer">
                             <td className="py-3 px-5 border-b border-blue-gray-50">
-                              <Typography variant="small" color="red" className="font-medium">
+                              <Typography variant="small" color="blue-gray" className="font-medium">
                                 {parseFloat(ask[0]).toFixed(2)}
                               </Typography>
                             </td>
                             <td className="py-3 px-5 border-b border-blue-gray-50">
                               <Typography variant="small" color="blue-gray" className="font-medium">
-                                {parseFloat(ask[1]).toFixed(4)}
+                                {parseFloat(ask[1]).toFixed(2)}
                               </Typography>
                             </td>
                             <td className="py-3 px-5 border-b border-blue-gray-50">
                               <Typography variant="small" color="blue-gray" className="font-medium">
-                                {(parseFloat(ask[0]) * parseFloat(ask[1])).toFixed(2)}
+                                ${(parseFloat(ask[0]) * parseFloat(ask[1])).toFixed(2)}
                               </Typography>
                             </td>
                           </tr>
@@ -325,101 +325,82 @@ export function Crypto() {
         </Card>
 
         <Card>
-        <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
-          <Typography variant="h6" color="blue-gray">
-            Recent Trades
-          </Typography>
-        </CardHeader>
-        <CardBody className="px-0 pt-0 pb-2">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[400px] table-auto">
-              <thead>
-                <tr>
-                  {["Price", "Amount", "Time"].map((el) => (
-                    <th key={el} className="border-b border-blue-gray-50 py-3 px-6 text-left">
-                      <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
-                        {el}
-                      </Typography>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {recentTrades.map((trade) => (
-                  <tr key={trade.id}>
-                    <td className="py-3 px-5 border-b border-blue-gray-50">
-                      <Typography variant="small" color={trade.isBuyerMaker ? "red" : "green"} className="font-medium">
-                        {parseFloat(trade.price).toFixed(2)}
-                      </Typography>
-                    </td>
-                    <td className="py-3 px-5 border-b border-blue-gray-50">
-                      <Typography variant="small" color="blue-gray" className="font-medium">
-                        {parseFloat(trade.qty).toFixed(4)}
-                      </Typography>
-                    </td>
-                    <td className="py-3 px-5 border-b border-blue-gray-50">
-                      <Typography variant="small" color="blue-gray" className="font-medium">
-                        {new Date(trade.time).toLocaleTimeString()}
-                      </Typography>
-                    </td>
+          <CardHeader floated={false} shadow={false} color="transparent" className="p-4 text-right">
+            <Typography variant="h6" color="blue-gray ">
+              التداولات الحديثة
+            </Typography>
+          </CardHeader>
+          <CardBody className="px-0 pt-0 pb-2">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] table-auto">
+                <thead>
+                  <tr>
+                    {["السعر", "الكمية", "الوقت"].map((el) => (
+                      <th key={el} className="border-b border-blue-gray-50 py-3 px-5 text-left">
+                        <Typography variant="small" className="text-[11px] font-medium uppercase text-blue-gray-400">
+                          {el}
+                        </Typography>
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardBody>
-      </Card>
+                </thead>
+                <tbody>
+                  {recentTrades.map((trade, index) => (
+                    <tr key={index} className="hover:bg-blue-gray-50/50 cursor-pointer">
+                      <td className="py-3 px-5 border-b border-blue-gray-50">
+                        <Typography variant="small" color="blue-gray" className="font-medium">
+                          {parseFloat(trade.price).toFixed(2)}
+                        </Typography>
+                      </td>
+                      <td className="py-3 px-5 border-b border-blue-gray-50">
+                        <Typography variant="small" color="blue-gray" className="font-medium">
+                          {parseFloat(trade.qty).toFixed(2)}
+                        </Typography>
+                      </td>
+                      <td className="py-3 px-5 border-b border-blue-gray-50">
+                        <Typography variant="small" color="blue-gray" className="font-medium">
+                          {new Date(trade.time).toLocaleTimeString()}
+                        </Typography>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
 
-      {/* Refresh Interval Selector */}
-      <Card className="mt-6">
-        <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
-          <Typography variant="h6" color="blue-gray">
-            Refresh Interval
+      {/* تنبيهات الأسعار */}
+      <Card dir='rtl'>
+        <CardHeader floated={false} shadow={false} color="transparent" className="p-4 text-right">
+          <Typography variant="h6"  color="blue-gray">
+            تنبيهات الأسعار
           </Typography>
         </CardHeader>
-        <CardBody>
-          <Select 
-            label="Refresh Interval" 
-            value={refreshInterval.toString()} 
-            onChange={(value) => setRefreshInterval(parseInt(value))}
-          >
-            <Option value="30000">30 seconds</Option>
-            <Option value="60000">1 minute</Option>
-            <Option value="300000">5 minutes</Option>
-          </Select>
-        </CardBody>
-      </Card>
-
-      {/* Price Alerts */}
-      <Card className="mt-6">
-        <CardHeader floated={false} shadow={false} color="transparent" className="p-4">
-          <Typography variant="h6" color="blue-gray">
-            Price Alerts
-          </Typography>
-        </CardHeader>
-        <CardBody>
-          <div className="flex items-center gap-4">
+        <CardBody className="text-right">
+          <div className="mb-4">
             <Input 
-              type="number" 
-              label="Alert Price" 
-              value={alertPrice} 
+              label="سعر التنبيه"
+              value={alertPrice}
               onChange={(e) => setAlertPrice(e.target.value)}
             />
-            <Button onClick={() => handleSetAlert('above')}>Alert Above</Button>
-            <Button onClick={() => handleSetAlert('below')}>Alert Below</Button>
+            <div className="mt-2 flex gap-2">
+              <Button onClick={() => handleSetAlert('above')} color="green">تنبيه عندما يرتفع السعر</Button>
+              <Button onClick={() => handleSetAlert('below')} color="red">تنبيه عندما ينخفض السعر</Button>
+            </div>
           </div>
-          <div className="mt-4">
-            <Typography variant="h6" color="blue-gray">
-              Active Alerts:
-            </Typography>
+          <div>
             {alerts.map((alert, index) => (
-              <Typography key={index} variant="small" color="blue-gray">
-                {alert.type.charAt(0).toUpperCase() + alert.type.slice(1)} {alert.price}
+              <Typography key={index} variant="small" color="blue-gray text-right" className="font-medium">
+                تنبيه عندما يكون السعر {alert.type === 'above' ? 'أعلى من' : 'أقل من'}: {alert.price}
               </Typography>
             ))}
           </div>
         </CardBody>
       </Card>
-      </div> </div>
+    </div>
   );
-};
+}
+
+export default Crypto;

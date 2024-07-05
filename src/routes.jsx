@@ -1,3 +1,4 @@
+
 import {
   HomeIcon,
   UserCircleIcon,
@@ -6,9 +7,7 @@ import {
   ServerStackIcon,
   RectangleStackIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications ,Crypto, SignalsDisplay,Scanner,
-  Views,News
-} from "@/pages/dashboard";
+import { Home, Profile, Tables, Notifications, Crypto, SignalsDisplay, Scanner, Views, News } from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 
 const icon = {
@@ -21,77 +20,79 @@ export const routes = [
     pages: [
       {
         icon: <HomeIcon {...icon} />,
-        name: "dashboard",
+        name: "لوحة القيادة",
         path: "/home",
         element: <Home />,
       }, 
-      
       {
         icon: <UserCircleIcon {...icon} />,
-        name: "news",
+        name: "الأخبار",
         path: "/news",
         element: <News />,
-      },{
+      },
+      {
         icon: <UserCircleIcon {...icon} />,
-        name: "crypto",
+        name: "العملات الرقمية",
         path: "/crypto",
         element: <Crypto />,
-      },/* {
+      },
+      /* {
         icon: <UserCircleIcon {...icon} />,
-        name: "charts",
+        name: "الرسوم البيانية",
         path: "/charts",
         element: <Charts />,
-      },*/ {
+      }, */
+      {
         icon: <UserCircleIcon {...icon} />,
-        name: "views",
+        name: "الآراء",
         path: "/views",
         element: <Views />,
-      },{
+      },
+      {
         icon: <UserCircleIcon {...icon} />,
-        name: "scanner",
+        name: "المسح الضوئي",
         path: "/scanner",
         element: <Scanner />,
       },
-      
-{
+      {
         icon: <UserCircleIcon {...icon} />,
-        name: "Signals Display",
+        name: "عرض الإشارات",
         path: "/signal-display",
         element: <SignalsDisplay />,
       },
       {
         icon: <UserCircleIcon {...icon} />,
-        name: "profile",
+        name: "الملف الشخصي",
         path: "/profile",
         element: <Profile />,
       },
       {
         icon: <TableCellsIcon {...icon} />,
-        name: "tables",
+        name: "الجداول",
         path: "/tables",
         element: <Tables />,
       },
       {
         icon: <InformationCircleIcon {...icon} />,
-        name: "notifications",
+        name: "الإشعارات",
         path: "/notifications",
         element: <Notifications />,
       },
     ],
   },
   {
-    title: "auth pages",
+    title: "صفحات المصادقة",
     layout: "auth",
     pages: [
       {
         icon: <ServerStackIcon {...icon} />,
-        name: "sign in",
+        name: "تسجيل الدخول",
         path: "/sign-in",
         element: <SignIn />,
       },
       {
         icon: <RectangleStackIcon {...icon} />,
-        name: "sign up",
+        name: "التسجيل",
         path: "/sign-up",
         element: <SignUp />,
       },

@@ -11,29 +11,29 @@ import routes from "@/routes";
 export function Auth() {
   const navbarRoutes = [
     {
-      name: "dashboard",
+      name: "لوحة القيادة",
       path: "/dashboard/home",
       icon: ChartPieIcon,
     },
     {
-      name: "profile",
+      name: "الملف الشخصي",
       path: "/dashboard/home",
       icon: UserIcon,
     },
     {
-      name: "sign up",
+      name: "التسجيل",
       path: "/auth/sign-up",
       icon: UserPlusIcon,
     },
     {
-      name: "sign in",
+      name: "تسجيل الدخول",
       path: "/auth/sign-in",
       icon: ArrowRightOnRectangleIcon,
     },
   ];
 
   return (
-    <div className="relative min-h-screen w-full">
+    <div className="relative min-h-screen w-full text-right" dir='rtl' style={{direction:"rtl"}}>
       <Routes>
         {routes.map(
           ({ layout, pages }) =>
