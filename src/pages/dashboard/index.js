@@ -5,6 +5,6 @@ export * from "@/pages/dashboard/notifications";
 export * from "@/pages/dashboard/crypto";
 export * from "@/pages/dashboard/showSignals";
 export * from "@/pages/dashboard/scanner";
-export * from "@/pages/dashboard/charts";
+//export * from "@/pages/dashboard/charts";
 export * from "@/pages/dashboard/views";
 export * from "@/pages/dashboard/news";

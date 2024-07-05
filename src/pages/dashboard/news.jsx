@@ -53,7 +53,7 @@ const cryptoNews = [
   },
 ];
 
-const BreakingNewsTickerR: React.FC = () => {
+const BreakingNewsTickerR= () => {
   const breakingNews = cryptoNews.filter(news => news.type === 'breaking');
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
 
@@ -80,7 +80,7 @@ const BreakingNewsTickerR: React.FC = () => {
   );
 };
 
-const NewsCard: React.FC<{ news: any }> = ({ news }) => {
+const NewsCard = ({ news }) => {
   const [expanded, setExpanded] = useState(false);
 
   return (
