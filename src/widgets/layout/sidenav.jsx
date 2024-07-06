@@ -40,7 +40,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
           color="black"
           size="sm"
           ripple={false}
-          className="absolute right-0 top-0 grid rounded-br-none rounded-tl-none xl:hidden"
+          className="absolute bg-gray-800 right-0 top-0 grid rounded-br-none rounded-tl-none xl:hidden"
           onClick={() => setOpenSidenav(dispatch, false)}
         >
           <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white" />
