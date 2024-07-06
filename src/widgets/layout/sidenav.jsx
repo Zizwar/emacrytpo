@@ -46,7 +46,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
           <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white" />
         </IconButton>
       </div>
-      <div dir="rtl" className="m-4 h-[550px] overflow-y-auto pr-2" >
+      <div dir="rtl" className="m-4 h-[500px] overflow-y-auto pr-2" >
         {routes.map(({ layout, title, pages }, key) => (
           <ul key={key} className="mb-4 flex flex-col gap-1">
             {title && (
