@@ -13,12 +13,12 @@ import { PencilIcon, CheckIcon } from "@heroicons/react/24/solid";
 export function Profile() {
   const [isEditing, setIsEditing] = useState({});
   const [profileData, setProfileData] = useState({
-    name: "Sarah Crypto",
-    role: "Crypto Trader",
+    name: "سارة كريبتو",
+    role: "متداولة عملات رقمية",
     walletAddress: "0x1234...5678",
-    preferredExchange: "Binance",
-    tradingVolume: "$50,000",
-    favoriteCoin: "Ethereum",
+    preferredExchange: "بينانس",
+    tradingVolume: "50,000$",
+    favoriteCoin: "إيثيريوم",
   });
 
   const handleEdit = (field) => {
@@ -34,39 +34,39 @@ export function Profile() {
   };
 
   const renderEditableField = (label, field) => (
-    <div className="mb-4">
+    <div className="mb-4 text-right">
       <Typography variant="h6" color="blue-gray" className="mb-2">
         {label}
       </Typography>
       {isEditing[field] ? (
-        <div className="flex items-center">
+        <div className="flex items-center justify-end">
+          <Button onClick={() => handleSave(field)} className="p-2 ml-2">
+            <CheckIcon className="h-4 w-4" />
+          </Button>
           <Input
             value={profileData[field]}
             onChange={(e) => handleChange(field, e.target.value)}
-            className="mr-2"
+            className="text-right"
           />
-          <Button onClick={() => handleSave(field)} className="p-2">
-            <CheckIcon className="h-4 w-4" />
-          </Button>
         </div>
       ) : (
         <div className="flex items-center justify-between">
-          <Typography>{profileData[field]}</Typography>
           <Button onClick={() => handleEdit(field)} className="p-2">
             <PencilIcon className="h-4 w-4" />
           </Button>
+          <Typography>{profileData[field]}</Typography>
         </div>
       )}
     </div>
   );
 
   return (
-    <Card className="mx-3 mt-8 mb-6 lg:mx-4 border border-blue-gray-100">
-      <CardHeader className="h-48 bg-gradient-to-r from-blue-500 to-purple-500">
-        <div className="absolute bottom-0 left-0 right-0 transform translate-y-1/2 flex justify-center">
+    <Card className="mx-3 mt-8 mb-6 lg:mx-4 border border-blue-gray-100" dir="rtl">
+      <CardHeader className="h-48 bg-gradient-to-l from-blue-500 to-purple-500">
+        <div className="absolute bottom-0 right-0 left-0 transform translate-y-1/2 flex justify-center">
           <Avatar
-            src="/img/crypto-avatar.png"
-            alt="Profile"
+            src="/api/placeholder/150/150"
+            alt="الصورة الشخصية"
             size="xxl"
             className="border-4 border-white"
           />
@@ -82,22 +82,22 @@ export function Profile() {
           </Typography>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {renderEditableField("Wallet Address", "walletAddress")}
-          {renderEditableField("Preferred Exchange", "preferredExchange")}
-          {renderEditableField("30-Day Trading Volume", "tradingVolume")}
-          {renderEditableField("Favorite Coin", "favoriteCoin")}
+          {renderEditableField("عنوان المحفظة", "walletAddress")}
+          {renderEditableField("المنصة المفضلة", "preferredExchange")}
+          {renderEditableField("حجم التداول (آخر 30 يوم)", "tradingVolume")}
+          {renderEditableField("العملة المفضلة", "favoriteCoin")}
         </div>
         <div className="mt-8">
-          <Typography variant="h5" color="blue-gray" className="mb-4">
-            Recent Transactions
+          <Typography variant="h5" color="blue-gray" className="mb-4 text-right">
+            آخر المعاملات
           </Typography>
-          {/* Здесь можно добавить компонент для отображения последних транзакций */}
+          {/* هنا يمكن إضافة مكون لعرض آخر المعاملات */}
         </div>
         <div className="mt-8">
-          <Typography variant="h5" color="blue-gray" className="mb-4">
-            Portfolio Distribution
+          <Typography variant="h5" color="blue-gray" className="mb-4 text-right">
+            توزيع المحفظة
           </Typography>
-          {/* Здесь можно добавить компонент для отображения распределения портфеля */}
+          {/* هنا يمكن إضافة مكون لعرض توزيع المحفظة */}
         </div>
       </CardBody>
     </Card>

@@ -6,15 +6,13 @@ import * as am5stock from "@amcharts/amcharts5/stock";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import { Card, CardHeader, CardBody, CardFooter, Typography, Button, Input, Select, Option } from "@material-tailwind/react";
 
-export function Notifications  () {
+export function Notifications() {
   const [selectedCrypto, setSelectedCrypto] = useState('BTCUSDT');
   const [priceAlert, setPriceAlert] = useState('');
   const [cryptoData, setCryptoData] = useState([]);
   const [timeframe, setTimeframe] = useState('1d');
   
-  const chart1Ref = useRef(null);
-  const chart2Ref = useRef(null);
-  const chart3Ref = useRef(null);
+  const chartRefs = [useRef(null), useRef(null), useRef(null)];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,78 +33,115 @@ export function Notifications  () {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 60000); // تحديث كل دقيقة
+    const interval = setInterval(fetchData, 60000); // Update every minute
 
     return () => clearInterval(interval);
   }, [selectedCrypto, timeframe]);
 
   useEffect(() => {
     if (cryptoData.length > 0 && am5) {
-      // إنشاء الرسم البياني الأول: سعر الإغلاق
-      if (chart1Ref.current) {
-        chart1Ref.current.dispose();
-      }
+      chartRefs.forEach((ref, index) => {
+        if (ref.current) {
+          ref.current.dispose();
+        }
 
-      let root = am5.Root.new("chartdiv1");
-      chart1Ref.current = root;
+        let root = am5.Root.new(`chartdiv${index + 1}`);
+        ref.current = root;
 
-      root.setThemes([am5themes_Animated.new(root)]);
+        root.setThemes([am5themes_Animated.new(root)]);
 
-      let chart = root.container.children.push(
-        am5xy.XYChart.new(root, {
-          panX: true,
-          panY: true,
-          wheelX: "panX",
-          wheelY: "zoomX"
-        })
-      );
-
-      let xAxis = chart.xAxes.push(
-        am5xy.DateAxis.new(root, {
-          baseInterval: { timeUnit: "minute", count: 1 },
-          renderer: am5xy.AxisRendererX.new(root, {})
-        })
-      );
-
-      let yAxis = chart.yAxes.push(
-        am5xy.ValueAxis.new(root, {
-          renderer: am5xy.AxisRendererY.new(root, {})
-        })
-      );
-
-      let series = chart.series.push(
-        am5xy.LineSeries.new(root, {
-          name: "السعر",
-          xAxis: xAxis,
-          yAxis: yAxis,
-          valueYField: "close",
-          valueXField: "date",
-          tooltip: am5.Tooltip.new(root, {
-            labelText: "{valueY}"
+        let chart = root.container.children.push(
+          am5xy.XYChart.new(root, {
+            panX: true,
+            panY: true,
+            wheelX: "panX",
+            wheelY: "zoomX"
           })
-        })
-      );
+        );
 
-      series.data.setAll(cryptoData);
+        let xAxis = chart.xAxes.push(
+          am5xy.DateAxis.new(root, {
+            baseInterval: { timeUnit: "minute", count: 1 },
+            renderer: am5xy.AxisRendererX.new(root, {})
+          })
+        );
 
-      chart.set("scrollbarX", am5.Scrollbar.new(root, { orientation: "horizontal" }));
+        let yAxis = chart.yAxes.push(
+          am5xy.ValueAxis.new(root, {
+            renderer: am5xy.AxisRendererY.new(root, {})
+          })
+        );
+
+        let series;
+        switch (index) {
+          case 0:
+            series = chart.series.push(
+              am5xy.LineSeries.new(root, {
+                name: "Price",
+                xAxis: xAxis,
+                yAxis: yAxis,
+                valueYField: "close",
+                valueXField: "date",
+                tooltip: am5.Tooltip.new(root, {
+                  labelText: "{valueY}"
+                })
+              })
+            );
+            break;
+          case 1:
+            series = chart.series.push(
+              am5xy.ColumnSeries.new(root, {
+                name: "Volume",
+                xAxis: xAxis,
+                yAxis: yAxis,
+                valueYField: "volume",
+                valueXField: "date",
+                tooltip: am5.Tooltip.new(root, {
+                  labelText: "{valueY}"
+                })
+              })
+            );
+            break;
+          case 2:
+            series = chart.series.push(
+              am5xy.CandlestickSeries.new(root, {
+                name: "Candlestick",
+                xAxis: xAxis,
+                yAxis: yAxis,
+                openValueYField: "open",
+                highValueYField: "high",
+                lowValueYField: "low",
+                closeValueYField: "close",
+                valueXField: "date",
+                tooltip: am5.Tooltip.new(root, {
+                  labelText: "Open: {openValueY}\nHigh: {highValueY}\nLow: {lowValueY}\nClose: {closeValueY}"
+                })
+              })
+            );
+            break;
+        }
+
+        series.data.setAll(cryptoData);
+
+        chart.set("scrollbarX", am5.Scrollbar.new(root, { orientation: "horizontal" }));
+      });
     }
 
     return () => {
-      if (chart1Ref.current) {
-        chart1Ref.current.dispose();
-      }
+      chartRefs.forEach(ref => {
+        if (ref.current) {
+          ref.current.dispose();
+        }
+      });
     };
   }, [cryptoData]);
-
-  // تكرار نفس النمط للرسمين البيانيين الآخرين...
 
   const handleCryptoChange = (value) => {
     setSelectedCrypto(value);
   };
 
   const handleAlertSet = () => {
-    alert(`تم تعيين التنبيه عند السعر: ${priceAlert} دولار`);
+    alert(`Alert set at price: $${priceAlert}`);
   };
 
   const handleTimeframeChange = (value) => {
@@ -117,46 +152,46 @@ export function Notifications  () {
     <Card className="w-full max-w-[1200px] mx-auto">
       <CardHeader floated={false} shadow={false} className="rounded-none">
         <Typography variant="h2" color="blue-gray" className="text-center">
-          لوحة تحكم العملات الرقمية
+          Crypto Dashboard
         </Typography>
       </CardHeader>
       <CardBody>
         <div className="mb-4 flex justify-between">
           <Select
-            label="اختر العملة الرقمية"
+            label="Select Cryptocurrency"
             value={selectedCrypto}
             onChange={handleCryptoChange}
             className="w-1/3"
           >
-            <Option value="BTCUSDT">بيتكوين</Option>
-            <Option value="ETHUSDT">إيثيريوم</Option>
-            <Option value="BNBUSDT">بينانس كوين</Option>
-            <Option value="ADAUSDT">كاردانو</Option>
-            <Option value="XRPUSDT">ريبل</Option>
+            <Option value="BTCUSDT">Bitcoin</Option>
+            <Option value="ETHUSDT">Ethereum</Option>
+            <Option value="BNBUSDT">Binance Coin</Option>
+            <Option value="ADAUSDT">Cardano</Option>
+            <Option value="XRPUSDT">Ripple</Option>
           </Select>
           <Select
-            label="اختر الإطار الزمني"
+            label="Select Timeframe"
             value={timeframe}
             onChange={handleTimeframeChange}
             className="w-1/3"
           >
-            <Option value="1m">دقيقة</Option>
-            <Option value="5m">5 دقائق</Option>
-            <Option value="15m">15 دقيقة</Option>
-            <Option value="1h">ساعة</Option>
-            <Option value="4h">4 ساعات</Option>
-            <Option value="1d">يوم</Option>
+            <Option value="1m">1 minute</Option>
+            <Option value="5m">5 minutes</Option>
+            <Option value="15m">15 minutes</Option>
+            <Option value="1h">1 hour</Option>
+            <Option value="4h">4 hours</Option>
+            <Option value="1d">1 day</Option>
           </Select>
           <div className="w-1/3 flex items-center">
             <Input
               type="number"
-              label="تعيين تنبيه السعر"
+              label="Set Price Alert"
               value={priceAlert}
               onChange={(e) => setPriceAlert(e.target.value)}
               className="mr-2"
             />
             <Button onClick={handleAlertSet}>
-              تعيين التنبيه
+              Set Alert
             </Button>
           </div>
         </div>
@@ -170,11 +205,9 @@ export function Notifications  () {
       </CardBody>
       <CardFooter>
         <Typography variant="small" className="text-center">
-          آخر تحديث: {new Date().toLocaleTimeString('ar-EG')}
+          Last updated: {new Date().toLocaleTimeString()}
         </Typography>
       </CardFooter>
     </Card>
   );
-};
-
-export default Notifications;
+}
