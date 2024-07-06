@@ -9,7 +9,6 @@ import {
   MenuHandler,
   MenuList,
   MenuItem,
-  Avatar,
   Tooltip,
   Progress,
 } from "@material-tailwind/react";
@@ -17,15 +16,51 @@ import {
   EllipsisVerticalIcon,
   ArrowUpIcon,
 } from "@heroicons/react/24/outline";
-import { StatisticsCard } from "@/widgets/cards";
 import { StatisticsChart } from "@/widgets/charts";
 import {
-  statisticsCardsData,
   statisticsChartsData,
-  cryptoProjectsData,
   marketOverviewData,
 } from "@/data";
-import { CheckCircleIcon, ClockIcon,  } from "@heroicons/react/24/solid";
+import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
+
+// بيانات العملات المشفرة المعدلة
+const cryptoProjectsData = [
+  {
+    img: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png",
+    name: "بيتكوين",
+    symbol: "BTC",
+    marketCap: "$1,046,899,935,348",
+    progress: 65,
+  },
+  {
+    img: "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
+    name: "إيثيريوم",
+    symbol: "ETH",
+    marketCap: "$225,559,775,406",
+    progress: 40,
+  },
+  {
+    img: "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+    name: "بينانس كوين",
+    symbol: "BNB",
+    marketCap: "$36,033,694,611",
+    progress: 30,
+  },
+  {
+    img: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png",
+    name: "يو إس دي كوين",
+    symbol: "USDC",
+    marketCap: "$26,169,885,690",
+    progress: 80,
+  },
+  {
+    img: "https://assets.coingecko.com/coins/images/325/small/Tether.png",
+    name: "تيثر",
+    symbol: "USDT",
+    marketCap: "$83,761,350,141",
+    progress: 70,
+  },
+];
 
 export function Home() {
   return (
@@ -51,7 +86,7 @@ export function Home() {
                 className="flex items-center gap-1 font-normal text-blue-gray-50"
               >
                 <CheckCircleIcon strokeWidth={3} className="h-4 w-4 text-green-300" />
-                <strong>10 مشاريع مكتملة</strong> هذا الشهر
+                <strong>5 عملات رئيسية</strong> في السوق
               </Typography>
             </div>
             <Menu placement="left-start">
@@ -75,7 +110,7 @@ export function Home() {
             <table className="w-full min-w-[640px] table-auto">
               <thead>
                 <tr>
-                  {["المشروع", "الفريق", "القيمة السوقية", "التقدم"].map(
+                  {["العملة", "الرمز", "القيمة السوقية", "التقدم"].map(
                     (el) => (
                       <th
                         key={el}
@@ -94,7 +129,7 @@ export function Home() {
               </thead>
               <tbody>
                 {cryptoProjectsData.map(
-                  ({ img, name, members, marketCap, progress }, key) => {
+                  ({ img, name, symbol, marketCap, progress }, key) => {
                     const className = `py-3 px-5 ${
                       key === cryptoProjectsData.length - 1
                         ? ""
@@ -105,7 +140,7 @@ export function Home() {
                       <tr key={name}>
                         <td className={className}>
                           <div className="flex items-center gap-4">
-                            <Avatar src={img} alt={name} size="sm" />
+                            <img src={img} alt={name} className="w-8 h-8" />
                             <Typography
                               variant="small"
                               color="blue-gray"
@@ -116,19 +151,12 @@ export function Home() {
                           </div>
                         </td>
                         <td className={className}>
-                          {members.map(({ img, name }, key) => (
-                            <Tooltip key={name} content={name}>
-                              <Avatar
-                                src={img}
-                                alt={name}
-                                size="xs"
-                                variant="circular"
-                                className={`cursor-pointer border-2 border-white ${
-                                  key === 0 ? "" : "-mr-2.5"
-                                }`}
-                              />
-                            </Tooltip>
-                          ))}
+                          <Typography
+                            variant="small"
+                            className="text-xs font-medium text-blue-gray-600"
+                          >
+                            {symbol}
+                          </Typography>
                         </td>
                         <td className={className}>
                           <Typography
@@ -149,7 +177,7 @@ export function Home() {
                             <Progress
                               value={progress}
                               variant="gradient"
-                              color={progress === 100 ? "green" : "blue"}
+                              color={progress > 50 ? "green" : "blue"}
                               className="h-1"
                             />
                           </div>
@@ -220,24 +248,6 @@ export function Home() {
           </CardBody>
         </Card>
       </div>
-      <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
-        {statisticsCardsData.map(({ icon, title, footer, ...rest }) => (
-          <StatisticsCard
-            key={title}
-            {...rest}
-            title={title}
-            icon={React.createElement(icon, {
-              className: "w-6 h-6 text-white",
-            })}
-            footer={
-              <Typography className="font-normal text-blue-gray-600">
-                <strong className={footer.color}>{footer.value}</strong>
-                &nbsp;{footer.label}
-              </Typography>
-            }
-          />
-        ))}
-      </div>
       <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
         {statisticsChartsData.map((props) => (
           <StatisticsChart
@@ -258,5 +268,3 @@ export function Home() {
     </div>
   );
 }
-
-export default Home;
