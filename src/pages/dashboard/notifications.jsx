@@ -1,213 +1,150 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import * as am5 from "@amcharts/amcharts5";
-import * as am5xy from "@amcharts/amcharts5/xy";
-import * as am5stock from "@amcharts/amcharts5/stock";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import { Card, CardHeader, CardBody, CardFooter, Typography, Button, Input, Select, Option } from "@material-tailwind/react";
+import React, { useState, useEffect } from 'react';
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  Typography,
+  Select,
+  Option,
+  Input,
+  Button,
+  Checkbox,
+} from "@material-tailwind/react";
+
+// افتراض أننا قمنا باستيراد مكتبة للمؤشرات الفنية
+import { RSI, BollingerBands, MACD } from 'technicalindicators';
 
 export function Notifications() {
-  const [selectedCrypto, setSelectedCrypto] = useState('BTCUSDT');
-  const [priceAlert, setPriceAlert] = useState('');
   const [cryptoData, setCryptoData] = useState([]);
-  const [timeframe, setTimeframe] = useState('1d');
-  
-  const chartRefs = [useRef(null), useRef(null), useRef(null)];
+  const [filteredData, setFilteredData] = useState([]);
+  const [filters, setFilters] = useState({
+    priceChangePercent: '',
+    volume: '',
+    lastPrice: '',
+    rsi: '',
+    bollingerBands: false,
+    macd: false,
+  });
 
   useEffect(() => {
+    // في الحالة الفعلية، ستقوم بجلب البيانات من API
     const fetchData = async () => {
-      try {
-        const response = await axios.get(`https://api.binance.com/api/v3/klines?symbol=${selectedCrypto}&interval=${timeframe}`);
-        const formattedData = response.data.map(item => ({
-          date: new Date(item[0]),
-          open: parseFloat(item[1]),
-          high: parseFloat(item[2]),
-          low: parseFloat(item[3]),
-          close: parseFloat(item[4]),
-          volume: parseFloat(item[5])
-        }));
-        setCryptoData(formattedData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
+      // محاكاة جلب البيانات
+      const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+      const data = await response.json();
+      setCryptoData(data);
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 60000); // Update every minute
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [selectedCrypto, timeframe]);
+  const calculateIndicators = (data) => {
+    // هنا ستقوم بحساب المؤشرات الفنية باستخدام المكتبة
+    // هذا مثال بسيط، في الواقع ستحتاج لبيانات تاريخية أكثر
+    const rsi = RSI.calculate({values: [parseFloat(data.lastPrice)], period: 14});
+    const bb = BollingerBands.calculate({
+      period: 20,
+      values: [parseFloat(data.lastPrice)],
+      stdDev: 2
+    });
+    const macd = MACD.calculate({
+      fastPeriod: 12,
+      slowPeriod: 26,
+      signalPeriod: 9,
+      values: [parseFloat(data.lastPrice)],
+    });
 
-  useEffect(() => {
-    if (cryptoData.length > 0 && am5) {
-      chartRefs.forEach((ref, index) => {
-        if (ref.current) {
-          ref.current.dispose();
-        }
-
-        let root = am5.Root.new(`chartdiv${index + 1}`);
-        ref.current = root;
-
-        root.setThemes([am5themes_Animated.new(root)]);
-
-        let chart = root.container.children.push(
-          am5xy.XYChart.new(root, {
-            panX: true,
-            panY: true,
-            wheelX: "panX",
-            wheelY: "zoomX"
-          })
-        );
-
-        let xAxis = chart.xAxes.push(
-          am5xy.DateAxis.new(root, {
-            baseInterval: { timeUnit: "minute", count: 1 },
-            renderer: am5xy.AxisRendererX.new(root, {})
-          })
-        );
-
-        let yAxis = chart.yAxes.push(
-          am5xy.ValueAxis.new(root, {
-            renderer: am5xy.AxisRendererY.new(root, {})
-          })
-        );
-
-        let series;
-        switch (index) {
-          case 0:
-            series = chart.series.push(
-              am5xy.LineSeries.new(root, {
-                name: "Price",
-                xAxis: xAxis,
-                yAxis: yAxis,
-                valueYField: "close",
-                valueXField: "date",
-                tooltip: am5.Tooltip.new(root, {
-                  labelText: "{valueY}"
-                })
-              })
-            );
-            break;
-          case 1:
-            series = chart.series.push(
-              am5xy.ColumnSeries.new(root, {
-                name: "Volume",
-                xAxis: xAxis,
-                yAxis: yAxis,
-                valueYField: "volume",
-                valueXField: "date",
-                tooltip: am5.Tooltip.new(root, {
-                  labelText: "{valueY}"
-                })
-              })
-            );
-            break;
-          case 2:
-            series = chart.series.push(
-              am5xy.CandlestickSeries.new(root, {
-                name: "Candlestick",
-                xAxis: xAxis,
-                yAxis: yAxis,
-                openValueYField: "open",
-                highValueYField: "high",
-                lowValueYField: "low",
-                closeValueYField: "close",
-                valueXField: "date",
-                tooltip: am5.Tooltip.new(root, {
-                  labelText: "Open: {openValueY}\nHigh: {highValueY}\nLow: {lowValueY}\nClose: {closeValueY}"
-                })
-              })
-            );
-            break;
-        }
-
-        series.data.setAll(cryptoData);
-
-        chart.set("scrollbarX", am5.Scrollbar.new(root, { orientation: "horizontal" }));
-      });
-    }
-
-    return () => {
-      chartRefs.forEach(ref => {
-        if (ref.current) {
-          ref.current.dispose();
-        }
-      });
-    };
-  }, [cryptoData]);
-
-  const handleCryptoChange = (value) => {
-    setSelectedCrypto(value);
+    return { rsi: rsi[0], bb: bb[0], macd: macd[0] };
   };
 
-  const handleAlertSet = () => {
-    alert(`Alert set at price: $${priceAlert}`);
-  };
+  const applyFilters = () => {
+    const filtered = cryptoData.filter(crypto => {
+      const indicators = calculateIndicators(crypto);
+      
+      return (
+        (filters.priceChangePercent === '' || parseFloat(crypto.priceChangePercent) >= parseFloat(filters.priceChangePercent)) &&
+        (filters.volume === '' || parseFloat(crypto.volume) >= parseFloat(filters.volume)) &&
+        (filters.lastPrice === '' || parseFloat(crypto.lastPrice) >= parseFloat(filters.lastPrice)) &&
+        (filters.rsi === '' || indicators.rsi >= parseFloat(filters.rsi)) &&
+        (!filters.bollingerBands || (indicators.bb && crypto.lastPrice >= indicators.bb.lower && crypto.lastPrice <= indicators.bb.upper)) &&
+        (!filters.macd || (indicators.macd && indicators.macd.histogram > 0))
+      );
+    });
 
-  const handleTimeframeChange = (value) => {
-    setTimeframe(value);
+    setFilteredData(filtered);
   };
 
   return (
-    <Card className="w-full max-w-[1200px] mx-auto">
+    <Card className="w-full max-w-[64rem] mx-auto">
       <CardHeader floated={false} shadow={false} className="rounded-none">
-        <Typography variant="h2" color="blue-gray" className="text-center">
-          Crypto Dashboard
+        <Typography variant="h5" color="blue-gray">
+          فلتر العملات المشفرة المتقدم
         </Typography>
       </CardHeader>
       <CardBody>
-        <div className="mb-4 flex justify-between">
-          <Select
-            label="Select Cryptocurrency"
-            value={selectedCrypto}
-            onChange={handleCryptoChange}
-            className="w-1/3"
-          >
-            <Option value="BTCUSDT">Bitcoin</Option>
-            <Option value="ETHUSDT">Ethereum</Option>
-            <Option value="BNBUSDT">Binance Coin</Option>
-            <Option value="ADAUSDT">Cardano</Option>
-            <Option value="XRPUSDT">Ripple</Option>
-          </Select>
-          <Select
-            label="Select Timeframe"
-            value={timeframe}
-            onChange={handleTimeframeChange}
-            className="w-1/3"
-          >
-            <Option value="1m">1 minute</Option>
-            <Option value="5m">5 minutes</Option>
-            <Option value="15m">15 minutes</Option>
-            <Option value="1h">1 hour</Option>
-            <Option value="4h">4 hours</Option>
-            <Option value="1d">1 day</Option>
-          </Select>
-          <div className="w-1/3 flex items-center">
-            <Input
-              type="number"
-              label="Set Price Alert"
-              value={priceAlert}
-              onChange={(e) => setPriceAlert(e.target.value)}
-              className="mr-2"
-            />
-            <Button onClick={handleAlertSet}>
-              Set Alert
-            </Button>
-          </div>
+        <div className="flex flex-wrap gap-4 mb-6">
+          <Input
+            label="نسبة تغير السعر ٪ <="
+            value={filters.priceChangePercent}
+            onChange={(e) => setFilters({...filters, priceChangePercent: e.target.value})}
+          />
+          <Input
+            label="الحجم >="
+            value={filters.volume}
+            onChange={(e) => setFilters({...filters, volume: e.target.value})}
+          />
+          <Input
+            label="السعر الأخير >="
+            value={filters.lastPrice}
+            onChange={(e) => setFilters({...filters, lastPrice: e.target.value})}
+          />
+          <Input
+            label="مؤشر القوة النسبية >="
+            value={filters.rsi}
+            onChange={(e) => setFilters({...filters, rsi: e.target.value})}
+          />
+          <Checkbox
+            label="ضمن نطاق بولينجر"
+            checked={filters.bollingerBands}
+            onChange={(e) => setFilters({...filters, bollingerBands: e.target.checked})}
+          />
+          <Checkbox
+            label="إشارة MACD إيجابية"
+            checked={filters.macd}
+            onChange={(e) => setFilters({...filters, macd: e.target.checked})}
+          />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div id="chartdiv1" style={{ width: "100%", height: "300px" }}></div>
-          <div id="chartdiv2" style={{ width: "100%", height: "300px" }}></div>
-        </div>
-        <div className="mt-4">
-          <div id="chartdiv3" style={{ width: "100%", height: "400px" }}></div>
+        <Button onClick={applyFilters}>تطبيق الفلاتر</Button>
+        
+        <div className="mt-6">
+          <Typography variant="h6" color="blue-gray" className="mb-2">
+            النتائج
+          </Typography>
+          <table className="w-full min-w-max table-auto text-left">
+            <thead>
+              <tr>
+                {["الرمز", "السعر الأخير", "نسبة التغير", "الحجم"].map((head) => (
+                  <th key={head} className="border-b border-blue-gray-100 bg-blue-gray-50 p-4">
+                    {head}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.map(({ symbol, lastPrice, priceChangePercent, volume }, index) => (
+                <tr key={symbol} className="even:bg-blue-gray-50/50">
+                  <td className="p-4">{symbol}</td>
+                  <td className="p-4">{lastPrice}</td>
+                  <td className="p-4">{priceChangePercent}%</td>
+                  <td className="p-4">{volume}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </CardBody>
-      <CardFooter>
-        <Typography variant="small" className="text-center">
-          Last updated: {new Date().toLocaleTimeString()}
-        </Typography>
-      </CardFooter>
     </Card>
   );
-}
+};
+
+export default Notifications;
