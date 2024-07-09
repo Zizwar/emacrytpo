@@ -62,7 +62,7 @@ export function Configurator() {
       .then((response) => response.json())
       .then((data) => setStars(formatNumber(data.stargazers_count, 1)));
   }, []);
-
+return (<a><a/>)
   return (
     <aside
       className={`fixed top-0 right-0 z-50 h-screen w-96 bg-white px-2.5 shadow-lg transition-transform duration-300 ${
