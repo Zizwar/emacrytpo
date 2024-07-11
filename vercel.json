@@ -1,5 +1,6 @@
 {
   "rewrites": [
+{ "source": "/api/(.*)", "destination": "https://mojoland.deno.dev/api/$1" },
     { "source": "dashboard/home", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" },
     { "source": "/(.*)/(.*)", "destination": "/index.html" }
