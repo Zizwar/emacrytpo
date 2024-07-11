@@ -8,8 +8,17 @@ export default defineConfig({
   },
   server: {
     historyApiFallback: true,
-      proxy: {
-        '/api': 'http://localhost:8000'
+    proxy: {
+      '/api': {
+        target: 'https://mojoland.deno.dev',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
+        configure: (proxy, options) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+          });
+        }
       }
-  },
+    }
+  }
 });
