@@ -1,30 +1,119 @@
+import React, { useState } from 'react';
 import {
   Card,
   Input,
   Checkbox,
   Button,
   Typography,
+  Alert,
 } from "@material-tailwind/react";
 import { Link } from "react-router-dom";
 
-
 export function SignIn() {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    email: '',
+    phone: '',
+  });
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    // التحقق من إدخال كلمة المرور وواحد على الأقل من اليوزر نيم أو الهاتف أو البريد الإلكتروني
+    if (!formData.password || !(formData.username || formData.email || formData.phone)) {
+      setError('يرجى إدخال كلمة المرور وواحد على الأقل من اسم المستخدم أو البريد الإلكتروني أو رقم الهاتف');
+      return;
+    }
+
+    try {
+      const response = await fetch('https://mojoland.deno.dev/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // حفظ التوكن في الكوكيز
+        document.cookie = `token=${data.token}; path=/; max-age=86400`; // صالح لمدة يوم واحد
+
+        // حفظ التوكن في local storage
+        localStorage.setItem('token', data.token);
+
+        // عرض رسالة نجاح
+        setSuccessMessage(`تم تسجيل الدخول بنجاح! التوكن: ${data.token}`);
+
+        // عرض التوكن في نافذة تنبيه
+        alert(`تم استلام التوكن: ${data.token}`);
+      } else {
+        setError('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
+      }
+    } catch (error) {
+      setError('حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة مرة أخرى لاحقًا.');
+    }
+  };
+
   return (
     <section className="m-8 flex gap-4">
       <div className="w-full lg:w-3/5 mt-24">
         <div className="text-center">
           <img src="/path/to/your/icon.png" alt="Icon" className="mx-auto mb-4"/>
           <Typography variant="h2" className="font-bold mb-4">تسجيل الدخول</Typography>
-          <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">أدخل بريدك الإلكتروني وكلمة المرور لتسجيل الدخول.</Typography>
+          <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">أدخل بياناتك لتسجيل الدخول.</Typography>
         </div>
-        <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2">
+        <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2" onSubmit={handleSubmit}>
           <div className="mb-1 flex flex-col gap-6">
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              بريدك الإلكتروني
+              اسم المستخدم
             </Typography>
             <Input
               size="lg"
+              name="username"
+              placeholder="اسم المستخدم"
+              onChange={handleChange}
+              value={formData.username}
+              className="!border-t-blue-gray-200 focus:!border-t-gray-900"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
+            />
+            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+              البريد الإلكتروني
+            </Typography>
+            <Input
+              size="lg"
+              name="email"
+              type="email"
               placeholder="name@mail.com"
+              onChange={handleChange}
+              value={formData.email}
+              className="!border-t-blue-gray-200 focus:!border-t-gray-900"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
+            />
+            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+              رقم الهاتف
+            </Typography>
+            <Input
+              size="lg"
+              name="phone"
+              type="tel"
+              placeholder="رقم الهاتف"
+              onChange={handleChange}
+              value={formData.phone}
               className="!border-t-blue-gray-200 focus:!border-t-gray-900"
               labelProps={{
                 className: "before:content-none after:content-none",
@@ -35,83 +124,27 @@ export function SignIn() {
             </Typography>
             <Input
               type="password"
+              name="password"
               size="lg"
               placeholder="********"
+              onChange={handleChange}
+              value={formData.password}
               className="!border-t-blue-gray-200 focus:!border-t-gray-900"
               labelProps={{
                 className: "before:content-none after:content-none",
               }}
             />
           </div>
-          <Checkbox
-            label={
-              <Typography
-                variant="small"
-                color="gray"
-                className="flex items-center justify-start font-medium"
-              >
-                أوافق على&nbsp;
-                <a
-                  href="#"
-                  className="font-normal text-black transition-colors hover:text-gray-900 underline"
-                >
-                  الشروط والأحكام
-                </a>
-              </Typography>
-            }
-            containerProps={{ className: "-ml-2.5" }}
-          />
-          <Button className="mt-6" fullWidth>
+          {error && <Alert color="red" className="mt-4">{error}</Alert>}
+          {successMessage && <Alert color="green" className="mt-4">{successMessage}</Alert>}
+          <Button className="mt-6" fullWidth type="submit">
             تسجيل الدخول
           </Button>
-
-          <div className="flex items-center justify-between gap-2 mt-6">
-            <Checkbox
-              label={
-                <Typography
-                  variant="small"
-                  color="gray"
-                  className="flex items-center justify-start font-medium"
-                >
-                  اشترك في النشرة الإخبارية
-                </Typography>
-              }
-              containerProps={{ className: "-ml-2.5" }}
-            />
-            <Typography variant="small" className="font-medium text-gray-900">
-              <a href="#">
-                هل نسيت كلمة المرور؟
-              </a>
-            </Typography>
-          </div>
-          <div className="space-y-4 mt-8">
-            <Button size="lg" color="white" className="flex items-center gap-2 justify-center shadow-md" fullWidth>
-              <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g clipPath="url(#clip0_1156_824)">
-                  <path d="M16.3442 8.18429C16.3442 7.64047 16.3001 7.09371 16.206 6.55872H8.66016V9.63937H12.9813C12.802 10.6329 12.2258 11.5119 11.3822 12.0704V14.0693H13.9602C15.4741 12.6759 16.3442 10.6182 16.3442 8.18429Z" fill="#4285F4" />
-                  <path d="M8.65974 16.0006C10.8174 16.0006 12.637 15.2922 13.9627 14.0693L11.3847 12.0704C10.6675 12.5584 9.7415 12.8347 8.66268 12.8347C6.5756 12.8347 4.80598 11.4266 4.17104 9.53357H1.51074V11.5942C2.86882 14.2956 5.63494 16.0006 8.65974 16.0006Z" fill="#34A853" />
-                  <path d="M4.16852 9.53356C3.83341 8.53999 3.83341 7.46411 4.16852 6.47054V4.40991H1.51116C0.376489 6.67043 0.376489 9.33367 1.51116 11.5942L4.16852 9.53356Z" fill="#FBBC04" />
-                  <path d="M8.65974 3.16644C9.80029 3.1488 10.9026 3.57798 11.7286 4.36578L14.0127 2.08174C12.5664 0.72367 10.6469 -0.0229773 8.65974 0.000539111C5.63494 0.000539111 2.86882 1.70548 1.51074 4.40987L4.1681 6.4705C4.8001 4.57449 6.57266 3.16644 8.65974 3.16644Z" fill="#EA4335" />
-                </g>
-                <defs>
-                  <clipPath id="clip0_1156_824">
-                    <rect width="16" height="16" fill="white" transform="translate(0.5)" />
-                  </clipPath>
-                </defs>
-              </svg>
-              <span>تسجيل الدخول بواسطة Google</span>
-            </Button>
-            <Button size="lg" color="white" className="flex items-center gap-2 justify-center shadow-md" fullWidth>
-              <img src="/img/twitter-logo.svg" height={24} width={24} alt="" />
-              <span>تسجيل الدخول بواسطة Twitter</span>
-            </Button>
-          </div>
           <Typography variant="paragraph" className="text-center text-blue-gray-500 font-medium mt-4">
-            غير مسجل؟
-            <Link to="/register" className="text-gray-900 ml-1">إنشاء حساب</Link>
+            ليس لديك حساب؟
+            <Link to="/register" className="text-gray-900 mr-1">إنشاء حساب</Link>
           </Typography>
         </form>
-
       </div>
       <div className="w-2/5 h-full hidden lg:block">
         <img
@@ -119,7 +152,6 @@ export function SignIn() {
           className="h-full w-full object-cover rounded-3xl"
         />
       </div>
-
     </section>
   );
 }
