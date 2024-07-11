@@ -35,7 +35,7 @@ export function SignIn() {
     }
 
     try {
-      const response = await fetch('https://mojoland.deno.dev/api/register', {
+      const response = await fetch('/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
