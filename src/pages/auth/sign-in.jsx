@@ -11,30 +11,38 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 export function SignIn() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    identityType: '',
-    identityValue: '',
+    username: '',
     password: '',
+    email: '',
+    phone: '',
   });
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const navigate = useNavigate();
+  const [identityType, setIdentityType] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleIdentityTypeChange = (value) => {
-    setFormData({ ...formData, identityType: value, identityValue: '' });
+    setIdentityType(value);
+    // Reset other identity fields
+    setFormData({
+      ...formData,
+      username: '',
+      email: '',
+      phone: '',
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccessMessage('');
 
-    if (!formData.identityType || !formData.identityValue || !formData.password) {
-      setError('يرجى إدخال جميع الحقول المطلوبة');
+    // التحقق من إدخال كلمة المرور وواحد على الأقل من اليوزر نيم أو الهاتف أو البريد الإلكتروني
+    if (!formData.password || !(formData.username || formData.email || formData.phone)) {
+      setError('يرجى إدخال كلمة المرور وواحد على الأقل من اسم المستخدم أو البريد الإلكتروني أو رقم الهاتف');
       return;
     }
 
@@ -50,19 +58,14 @@ export function SignIn() {
       const data = await response.json();
 
       if (response.ok) {
-        // تخزين التوكن في الكوكي
-        document.cookie = `token=${data.token}; path=/; max-age=86400`;
-        
-        // تخزين التوكن في Local Storage
+        // حفظ التوكن في الكوكيز
+        document.cookie = `token=${data.token}; path=/; max-age=86400`; // صالح لمدة يوم واحد
+
+        // حفظ التوكن في local storage
         localStorage.setItem('token', data.token);
-        
-        // عرض رسالة نجاح بدون إظهار التوكن
-        setSuccessMessage('تم تسجيل الدخول بنجاح!');
-        
-        // التوجيه إلى الصفحة الرئيسية بعد ثانية واحدة
-        setTimeout(() => {
-          navigate('/');
-        }, 1000);
+
+        // التوجيه إلى الصفحة الرئيسية
+        navigate('/');
       } else {
         setError('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
       }
@@ -72,15 +75,15 @@ export function SignIn() {
   };
 
   const renderIdentityInput = () => {
-    switch (formData.identityType) {
+    switch (identityType) {
       case 'username':
         return (
           <Input
             size="lg"
-            name="identityValue"
+            name="username"
             placeholder="اسم المستخدم"
             onChange={handleChange}
-            value={formData.identityValue}
+            value={formData.username}
             className="!border-t-blue-gray-200 focus:!border-t-gray-900"
             labelProps={{
               className: "before:content-none after:content-none",
@@ -91,11 +94,11 @@ export function SignIn() {
         return (
           <Input
             size="lg"
-            name="identityValue"
+            name="email"
             type="email"
             placeholder="name@mail.com"
             onChange={handleChange}
-            value={formData.identityValue}
+            value={formData.email}
             className="!border-t-blue-gray-200 focus:!border-t-gray-900"
             labelProps={{
               className: "before:content-none after:content-none",
@@ -106,11 +109,11 @@ export function SignIn() {
         return (
           <Input
             size="lg"
-            name="identityValue"
+            name="phone"
             type="tel"
             placeholder="رقم الهاتف"
             onChange={handleChange}
-            value={formData.identityValue}
+            value={formData.phone}
             className="!border-t-blue-gray-200 focus:!border-t-gray-900"
             labelProps={{
               className: "before:content-none after:content-none",
@@ -138,7 +141,7 @@ export function SignIn() {
             <Select
               size="lg"
               name="identityType"
-              value={formData.identityType}
+              value={identityType}
               onChange={handleIdentityTypeChange}
               className="!border-t-blue-gray-200 focus:!border-t-gray-900"
             >
@@ -164,7 +167,6 @@ export function SignIn() {
             />
           </div>
           {error && <Alert color="red" className="mt-4">{error}</Alert>}
-          {successMessage && <Alert color="green" className="mt-4">{successMessage}</Alert>}
           <Button className="mt-6" fullWidth type="submit">
             تسجيل الدخول
           </Button>
