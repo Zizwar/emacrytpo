@@ -35,7 +35,7 @@ export function SignIn() {
     }
 
     try {
-      const response = await fetch('/api/register', {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,6 +57,7 @@ export function SignIn() {
 
         // عرض التوكن في نافذة تنبيه
         alert(`تم استلام التوكن: ${data.token}`);
+
       } else {
         setError('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
       }
@@ -69,7 +70,7 @@ export function SignIn() {
     <section className="m-8 flex gap-4">
       <div className="w-full lg:w-3/5 mt-24">
         <div className="text-center">
-          <img src="/path/to/your/icon.png" alt="Icon" className="mx-auto mb-4"/>
+          <img height={200} width={200} src="https://cdn-icons-png.flaticon.com/512/887/887768.png" alt="Icon" className="mx-auto mb-4"/>
           <Typography variant="h2" className="font-bold mb-4">تسجيل الدخول</Typography>
           <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">أدخل بياناتك لتسجيل الدخول.</Typography>
         </div>
@@ -142,7 +143,7 @@ export function SignIn() {
           </Button>
           <Typography variant="paragraph" className="text-center text-blue-gray-500 font-medium mt-4">
             ليس لديك حساب؟
-            <Link to="/register" className="text-gray-900 mr-1">إنشاء حساب</Link>
+            <Link to="/auth/sign-up" className="text-gray-900 mr-1">إنشاء حساب</Link>
           </Typography>
         </form>
       </div>
