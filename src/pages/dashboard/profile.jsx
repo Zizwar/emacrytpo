@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardBody,
@@ -9,7 +9,7 @@ import {
   Input,
   Alert,
 } from "@material-tailwind/react";
-import { PencilIcon, CheckIcon, CameraIcon } from "@heroicons/react/24/solid";
+import { PencilIcon, CheckIcon } from "@heroicons/react/24/solid";
 
 export function Profile() {
   const [isEditing, setIsEditing] = useState({});
@@ -28,7 +28,6 @@ export function Profile() {
     image: "",
   });
   const [updateMessage, setUpdateMessage] = useState("");
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchProfileData();
@@ -55,6 +54,8 @@ export function Profile() {
       }
 
       const data = await response.json();
+      // Ensure address is an object even if it's null or undefined
+      data.address = data.address || { street: "", city: "", zip: "" };
       setProfileData(data);
     } catch (error) {
       console.error('Error fetching profile data:', error);
@@ -79,7 +80,7 @@ export function Profile() {
       updatedData = {
         address: {
           ...profileData.address,
-          [field.split('.')[1]]: profileData.address[field.split('.')[1]]
+          [field.split('.')[1]]: profileData.address[field.split('.')[1]] || ""
         }
       };
     } else {
@@ -129,44 +130,6 @@ export function Profile() {
     }
   };
 
-  const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', "ema");
-    formData.append('api_key', '456813252822779'); 
-    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dp1soxtyr/image/upload";
-
-    try {
-      const response = await fetch(CLOUDINARY_URL, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const data = await response.json();
-      const imageUrl = data.secure_url;
-
-      // Update profile image
-      setProfileData(prev => ({
-        ...prev,
-        image: imageUrl,
-      }));
-
-      // Send updated image URL to your server
-      await handleSave('image');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      setUpdateMessage('فشل تحميل الصورة');
-      setTimeout(() => setUpdateMessage(""), 3000);
-    }
-  };
-
   const renderEditableField = (label, field) => (
     <div className="mb-4 text-right">
       <Typography variant="h6" color="blue-gray" className="mb-2">
@@ -178,7 +141,7 @@ export function Profile() {
             <CheckIcon className="h-4 w-4" />
           </Button>
           <Input
-            value={field.startsWith('address.') ? profileData.address[field.split('.')[1]] : profileData[field]}
+            value={field.startsWith('address.') ? profileData.address[field.split('.')[1]] || "" : profileData[field] || ""}
             onChange={(e) => handleChange(field, e.target.value)}
             className="text-right"
           />
@@ -188,7 +151,7 @@ export function Profile() {
           <Button onClick={() => handleEdit(field)} className="p-2">
             <PencilIcon className="h-4 w-4" />
           </Button>
-          <Typography>{field.startsWith('address.') ? profileData.address[field.split('.')[1]] : profileData[field]}</Typography>
+          <Typography>{field.startsWith('address.') ? profileData.address[field.split('.')[1]] || "" : profileData[field] || ""}</Typography>
         </div>
       )}
     </div>
@@ -198,29 +161,12 @@ export function Profile() {
     <Card className="mx-3 mt-8 mb-6 lg:mx-4 border border-blue-gray-100" dir="rtl">
       <CardHeader className="h-48 bg-gradient-to-l from-blue-500 to-purple-500">
         <div className="absolute top-4 right-0 left-0 flex justify-center">
-          <div className="relative">
-            <Avatar
-              src={profileData.image}
-              alt="الصورة الشخصية"
-              size="xxl"
-              className="border-4 border-white"
-            />
-            <Button
-              size="sm"
-              color="white"
-              className="absolute bottom-0 right-0 rounded-full p-2"
-              onClick={() => fileInputRef.current.click()}
-            >
-              <CameraIcon className="h-4 w-4" />
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleImageUpload}
-              accept="image/*"
-            />
-          </div>
+          <Avatar
+            src={profileData.image || "https://transplant.org.au/wp-content/uploads/2018/06/James-avatar-for-website-500x500.png"}
+            alt="الصورة الشخصية"
+            size="xxl"
+            className="border-4 border-white"
+          />
         </div>
       </CardHeader>
       <CardBody className="p-4 mt-16">
@@ -231,10 +177,10 @@ export function Profile() {
         )}
         <div className="mb-10 text-center">
           <Typography variant="h4" color="blue-gray" className="mb-2">
-            {`${profileData.firstname} ${profileData.lastname}`}
+            {`${profileData.firstname || ""} ${profileData.lastname || ""}`}
           </Typography>
           <Typography variant="lead" color="blue-gray" className="font-normal">
-            {profileData.roles.map(role => role.role.name).join(', ')}
+            {profileData.roles?.map(role => role.role.name).join(', ') || ""}
           </Typography>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
