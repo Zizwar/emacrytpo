@@ -2,25 +2,30 @@ import React, { useState } from 'react';
 import {
   Card,
   Input,
-  Checkbox,
   Button,
   Typography,
   Alert,
+  Select,
+  Option,
 } from "@material-tailwind/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export function SignIn() {
   const [formData, setFormData] = useState({
-    username: '',
+    identityType: '',
+    identityValue: '',
     password: '',
-    email: '',
-    phone: '',
   });
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleIdentityTypeChange = (value) => {
+    setFormData({ ...formData, identityType: value, identityValue: '' });
   };
 
   const handleSubmit = async (e) => {
@@ -28,9 +33,8 @@ export function SignIn() {
     setError('');
     setSuccessMessage('');
 
-    // التحقق من إدخال كلمة المرور وواحد على الأقل من اليوزر نيم أو الهاتف أو البريد الإلكتروني
-    if (!formData.password || !(formData.username || formData.email || formData.phone)) {
-      setError('يرجى إدخال كلمة المرور وواحد على الأقل من اسم المستخدم أو البريد الإلكتروني أو رقم الهاتف');
+    if (!formData.identityType || !formData.identityValue || !formData.password) {
+      setError('يرجى إدخال جميع الحقول المطلوبة');
       return;
     }
 
@@ -46,23 +50,75 @@ export function SignIn() {
       const data = await response.json();
 
       if (response.ok) {
-        // حفظ التوكن في الكوكيز
-        document.cookie = `token=${data.token}; path=/; max-age=86400`; // صالح لمدة يوم واحد
-
-        // حفظ التوكن في local storage
+        // تخزين التوكن في الكوكي
+        document.cookie = `token=${data.token}; path=/; max-age=86400`;
+        
+        // تخزين التوكن في Local Storage
         localStorage.setItem('token', data.token);
-
-        // عرض رسالة نجاح
-        setSuccessMessage(`تم تسجيل الدخول بنجاح! التوكن: ${data.token}`);
-
-        // عرض التوكن في نافذة تنبيه
-        alert(`تم استلام التوكن: ${data.token}`);
-
+        
+        // عرض رسالة نجاح بدون إظهار التوكن
+        setSuccessMessage('تم تسجيل الدخول بنجاح!');
+        
+        // التوجيه إلى الصفحة الرئيسية بعد ثانية واحدة
+        setTimeout(() => {
+          navigate('/');
+        }, 1000);
       } else {
         setError('فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
       }
     } catch (error) {
       setError('حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة مرة أخرى لاحقًا.');
+    }
+  };
+
+  const renderIdentityInput = () => {
+    switch (formData.identityType) {
+      case 'username':
+        return (
+          <Input
+            size="lg"
+            name="identityValue"
+            placeholder="اسم المستخدم"
+            onChange={handleChange}
+            value={formData.identityValue}
+            className="!border-t-blue-gray-200 focus:!border-t-gray-900"
+            labelProps={{
+              className: "before:content-none after:content-none",
+            }}
+          />
+        );
+      case 'email':
+        return (
+          <Input
+            size="lg"
+            name="identityValue"
+            type="email"
+            placeholder="name@mail.com"
+            onChange={handleChange}
+            value={formData.identityValue}
+            className="!border-t-blue-gray-200 focus:!border-t-gray-900"
+            labelProps={{
+              className: "before:content-none after:content-none",
+            }}
+          />
+        );
+      case 'phone':
+        return (
+          <Input
+            size="lg"
+            name="identityValue"
+            type="tel"
+            placeholder="رقم الهاتف"
+            onChange={handleChange}
+            value={formData.identityValue}
+            className="!border-t-blue-gray-200 focus:!border-t-gray-900"
+            labelProps={{
+              className: "before:content-none after:content-none",
+            }}
+          />
+        );
+      default:
+        return null;
     }
   };
 
@@ -77,49 +133,20 @@ export function SignIn() {
         <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2" onSubmit={handleSubmit}>
           <div className="mb-1 flex flex-col gap-6">
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              اسم المستخدم
+              اختر طريقة تسجيل الدخول
             </Typography>
-            <Input
+            <Select
               size="lg"
-              name="username"
-              placeholder="اسم المستخدم"
-              onChange={handleChange}
-              value={formData.username}
+              name="identityType"
+              value={formData.identityType}
+              onChange={handleIdentityTypeChange}
               className="!border-t-blue-gray-200 focus:!border-t-gray-900"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-            />
-            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              البريد الإلكتروني
-            </Typography>
-            <Input
-              size="lg"
-              name="email"
-              type="email"
-              placeholder="name@mail.com"
-              onChange={handleChange}
-              value={formData.email}
-              className="!border-t-blue-gray-200 focus:!border-t-gray-900"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-            />
-            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              رقم الهاتف
-            </Typography>
-            <Input
-              size="lg"
-              name="phone"
-              type="tel"
-              placeholder="رقم الهاتف"
-              onChange={handleChange}
-              value={formData.phone}
-              className="!border-t-blue-gray-200 focus:!border-t-gray-900"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-            />
+            >
+              <Option value="username">اسم المستخدم</Option>
+              <Option value="email">البريد الإلكتروني</Option>
+              <Option value="phone">رقم الهاتف</Option>
+            </Select>
+            {renderIdentityInput()}
             <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
               كلمة المرور
             </Typography>

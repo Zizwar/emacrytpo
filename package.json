@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.3.12",
+    "@cloudinary/react": "^1.13.0",
+    "@cloudinary/url-gen": "^1.19.0",
     "@heroicons/react": "2.0.18",
     "@material-tailwind/react": "2.1.4",
     "apexcharts": "3.44.0",

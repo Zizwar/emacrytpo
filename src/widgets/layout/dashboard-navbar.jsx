@@ -1,4 +1,4 @@
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link,useNavigate } from "react-router-dom";
 import {
   Navbar,
   Typography,
@@ -32,6 +32,16 @@ export function DashboardNavbar() {
   const { pathname } = useLocation();
   const [layout, page] = pathname.split("/").filter((el) => el !== "");
 
+
+    const navigate = useNavigate();
+  
+    const handleLogout = () => {
+      localStorage.removeItem('token');
+  
+      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        navigate('/auth/sign-in');
+    };
+    
   return (
     <Navbar
       color={fixedNavbar ? "white" : "transparent"}
@@ -157,24 +167,23 @@ export function DashboardNavbar() {
               </MenuItem>
             </MenuList>
           </Menu>
-          <Link to="/auth/sign-in">
-            <Button
-              variant="text"
-              color="blue-gray"
-              className="hidden items-center gap-1 px-4 xl:flex normal-case"
-            >
-              <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-              تسجيل الدخول
-            </Button>
-            <IconButton
-              variant="text"
-              color="blue-gray"
-              className="grid xl:hidden"
-            >
-              <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
-            </IconButton>
-          </Link>
-          <div className="mr-auto md:mr-4 md:w-56">
+          <Button
+        variant="text"
+        color="blue-gray"
+        className="hidden items-center gap-1 px-4 xl:flex normal-case"
+        onClick={handleLogout}
+      >
+        <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
+        تسجيل الخروج
+      </Button>
+      <IconButton
+        variant="text"
+        color="blue-gray"
+        className="grid xl:hidden"
+        onClick={handleLogout}
+      >
+        <UserCircleIcon className="h-5 w-5 text-blue-gray-500" />
+      </IconButton>   <div className="mr-auto md:mr-4 md:w-56">
             <Input label="بحث" dir="rtl" />
           </div>
           <IconButton
