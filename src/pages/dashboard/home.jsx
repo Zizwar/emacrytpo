@@ -23,7 +23,7 @@ import {
 } from "@/data";
 import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
 
-// بيانات العملات المشفرة المعدلة
+
 const cryptoProjectsData = [
   {
     img: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png",
