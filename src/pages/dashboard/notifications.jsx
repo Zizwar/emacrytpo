@@ -78,16 +78,22 @@ export function Notifications () {
 
   const fetchCryptoData = async () => {
     try {
-      const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?limit=10&offset=${(page - 1) * 10}`);
+      const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
       const data = await response.json();
-      setCryptoData(prevData => [...prevData, ...data]);
-      setHasMore(data.length === 10);
+      const sortedData = data.sort((a, b) => parseFloat(b.volume) - parseFloat(a.volume));
+      const paginatedData = sortedData.slice((page - 1) * 10, page * 10);
+      setCryptoData(prevData => {
+        const newData = [...prevData, ...paginatedData];
+       
+        return Array.from(new Set(newData.map(crypto => crypto.symbol)))
+          .map(symbol => newData.find(crypto => crypto.symbol === symbol));
+      });
+      setHasMore(paginatedData.length === 10);
     } catch (error) {
       console.error('Error fetching crypto data:', error);
       setErrorMessage('حدث خطأ أثناء جلب بيانات العملات المشفرة.');
     }
   };
-
   const toggleListening = () => {
     setErrorMessage('');
     if (isListening) {
