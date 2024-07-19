@@ -8,7 +8,7 @@ import {
   Button,
   Textarea,
 } from "@material-tailwind/react";
-import { Mic, MicOff, Speaker, Send } from "lucide-react";
+import { Mic, StopCircle, Speaker, Send } from "lucide-react";
 
 export  function Notifications() {
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -16,41 +16,30 @@ export  function Notifications() {
   const [response, setResponse] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [listeningMessage, setListeningMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
-  const textareaRef = useRef(null);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current = new window.webkitSpeechRecognition();
       recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'ar-SA';
 
-      recognitionRef.current.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join('');
-        
-        // Insert the transcript at the current cursor position
-        const textarea = textareaRef.current;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = textarea.value;
-        const before = text.substring(0, start);
-        const after = text.substring(end, text.length);
-        setUserPrompt(before + transcript + after);
-        
-        // Move cursor to end of inserted text
-        textarea.selectionStart = textarea.selectionEnd = start + transcript.length;
+      recognitionRef.current.onresult = function(event) {
+        const transcript = event.results[event.results.length - 1][0].transcript;
+        setUserPrompt(prevPrompt => prevPrompt + transcript + ' ');
       };
 
-      recognitionRef.current.onend = () => {
+      recognitionRef.current.onerror = function(event) {
+        console.error('خطأ في التعرف على الكلام:', event.error);
+        if (event.error === 'not-allowed') {
+          setErrorMessage('خطأ: لم يتم السماح باستخدام الميكروفون. يرجى التحقق من إعدادات المتصفح والسماح بالوصول إلى الميكروفون.');
+        } else {
+          setErrorMessage('حدث خطأ أثناء التعرف على الكلام. يرجى المحاولة مرة أخرى.');
+        }
         setIsListening(false);
-        setListeningMessage("");
       };
     }
 
@@ -67,12 +56,11 @@ export  function Notifications() {
   }, []);
 
   const toggleListening = () => {
+    setErrorMessage(''); // مسح رسائل الخطأ السابقة
     if (isListening) {
       recognitionRef.current.stop();
-      setListeningMessage("");
     } else {
       recognitionRef.current.start();
-      setListeningMessage("جاري الاستماع...");
     }
     setIsListening(!isListening);
   };
@@ -93,6 +81,7 @@ export  function Notifications() {
       setResponse(data.text);
     } catch (error) {
       console.error('Error:', error);
+      setErrorMessage('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
     }
   };
 
@@ -127,7 +116,6 @@ export  function Notifications() {
               value={userPrompt}
               onChange={(e) => setUserPrompt(e.target.value)}
               className="pr-10"
-              ref={textareaRef}
             />
             <Button
               size="sm"
@@ -135,12 +123,12 @@ export  function Notifications() {
               className="!absolute right-1 top-1"
               onClick={toggleListening}
             >
-              {isListening ? <MicOff /> : <Mic />}
+              {isListening ? <StopCircle /> : <Mic />}
             </Button>
           </div>
-          {listeningMessage && (
-            <Typography color="blue" className="text-center">
-              {listeningMessage}
+          {errorMessage && (
+            <Typography color="red" className="text-center">
+              {errorMessage}
             </Typography>
           )}
           <Button onClick={handleSubmit} fullWidth>
