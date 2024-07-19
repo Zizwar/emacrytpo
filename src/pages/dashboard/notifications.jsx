@@ -9,7 +9,7 @@ import {
   Textarea,
   Chip,
 } from "@material-tailwind/react";
-import { Lic as Microphone, StopCircle, Speaker, Send, Search } from "lucide-react";
+import { Mic as Microphone, StopCircle, Speaker, Send, Search } from "lucide-react";
 
 export function Notifications () {
   const [systemPrompt, setSystemPrompt] = useState("");
