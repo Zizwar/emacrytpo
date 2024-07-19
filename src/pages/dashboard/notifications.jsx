@@ -8,7 +8,7 @@ import {
   Button,
   Textarea,
 } from "@material-tailwind/react";
-import { Mic, Speaker, Send } from "lucide-react";
+import { Mic, MicOff, Speaker, Send } from "lucide-react";
 
 export  function Notifications() {
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -16,9 +16,11 @@ export  function Notifications() {
   const [response, setResponse] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [listeningMessage, setListeningMessage] = useState("");
 
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
@@ -32,7 +34,23 @@ export  function Notifications() {
         const transcript = Array.from(event.results)
           .map(result => result[0].transcript)
           .join('');
-        setUserPrompt(transcript);
+        
+        // Insert the transcript at the current cursor position
+        const textarea = textareaRef.current;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        const before = text.substring(0, start);
+        const after = text.substring(end, text.length);
+        setUserPrompt(before + transcript + after);
+        
+        // Move cursor to end of inserted text
+        textarea.selectionStart = textarea.selectionEnd = start + transcript.length;
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+        setListeningMessage("");
       };
     }
 
@@ -51,8 +69,10 @@ export  function Notifications() {
   const toggleListening = () => {
     if (isListening) {
       recognitionRef.current.stop();
+      setListeningMessage("");
     } else {
       recognitionRef.current.start();
+      setListeningMessage("جاري الاستماع...");
     }
     setIsListening(!isListening);
   };
@@ -107,6 +127,7 @@ export  function Notifications() {
               value={userPrompt}
               onChange={(e) => setUserPrompt(e.target.value)}
               className="pr-10"
+              ref={textareaRef}
             />
             <Button
               size="sm"
@@ -114,9 +135,14 @@ export  function Notifications() {
               className="!absolute right-1 top-1"
               onClick={toggleListening}
             >
-              <Mic />
+              {isListening ? <MicOff /> : <Mic />}
             </Button>
           </div>
+          {listeningMessage && (
+            <Typography color="blue" className="text-center">
+              {listeningMessage}
+            </Typography>
+          )}
           <Button onClick={handleSubmit} fullWidth>
             <Send className="mr-2 h-5 w-5" /> إرسال
           </Button>
