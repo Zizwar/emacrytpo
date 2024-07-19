@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
   CardBody,
@@ -7,11 +7,11 @@ import {
   Input,
   Button,
   Textarea,
-  Checkbox,
+  Chip,
 } from "@material-tailwind/react";
-import { Mic as Microphone, StopCircle, Speaker, Send } from "lucide-react";
+import { Lic as Microphone, StopCircle, Speaker, Send, Search } from "lucide-react";
 
-export function Notifications() {
+export function Notifications () {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [userPrompt, setUserPrompt] = useState("");
   const [response, setResponse] = useState("");
@@ -20,9 +20,23 @@ export function Notifications() {
   const [errorMessage, setErrorMessage] = useState("");
   const [cryptoData, setCryptoData] = useState([]);
   const [selectedCryptos, setSelectedCryptos] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
+  const observerRef = useRef(null);
+  const lastCryptoElementRef = useCallback(node => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observerRef.current.observe(node);
+  }, [hasMore]);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
@@ -48,8 +62,6 @@ export function Notifications() {
 
     synthRef.current = window.speechSynthesis;
 
-    fetchCryptoData();
-
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
@@ -60,11 +72,16 @@ export function Notifications() {
     };
   }, []);
 
+  useEffect(() => {
+    fetchCryptoData();
+  }, [page]);
+
   const fetchCryptoData = async () => {
     try {
-      const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+      const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?limit=10&offset=${(page - 1) * 10}`);
       const data = await response.json();
-      setCryptoData(data.slice(0, 100)); // نأخذ أول 100 عملة فقط للتبسيط
+      setCryptoData(prevData => [...prevData, ...data]);
+      setHasMore(data.length === 10);
     } catch (error) {
       console.error('Error fetching crypto data:', error);
       setErrorMessage('حدث خطأ أثناء جلب بيانات العملات المشفرة.');
@@ -114,24 +131,33 @@ export function Notifications() {
     }
   };
 
-  const handleCryptoSelection = (symbol) => {
-    setSelectedCryptos(prev => {
-      if (prev.includes(symbol)) {
-        return prev.filter(s => s !== symbol);
-      } else if (prev.length < 20) {
-        return [...prev, symbol];
-      } else {
-        setErrorMessage('يمكنك اختيار 20 عملة كحد أقصى.');
-        return prev;
-      }
-    });
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+    const results = cryptoData.filter(crypto => 
+      crypto.symbol.toLowerCase().includes(term)
+    ).slice(0, 10);
+    setSearchResults(results);
+  };
+
+  const handleCryptoSelection = (crypto) => {
+    if (selectedCryptos.length < 20) {
+      setSelectedCryptos(prev => [...prev, crypto]);
+      setSearchTerm("");
+      setSearchResults([]);
+    } else {
+      setErrorMessage('يمكنك اختيار 20 عملة كحد أقصى.');
+    }
+  };
+
+  const removeCrypto = (symbol) => {
+    setSelectedCryptos(prev => prev.filter(crypto => crypto.symbol !== symbol));
   };
 
   useEffect(() => {
-    const selectedCryptosData = cryptoData.filter(crypto => selectedCryptos.includes(crypto.symbol));
-    const systemPromptData = JSON.stringify(selectedCryptosData, null, 2);
-    setSystemPrompt(systemPromptData);
-  }, [selectedCryptos, cryptoData]);
+    const selectedCryptosData = JSON.stringify(selectedCryptos, null, 2);
+    setSystemPrompt(selectedCryptosData);
+  }, [selectedCryptos]);
 
   return (
     <Card className="w-full max-w-[64rem] mx-auto">
@@ -168,17 +194,29 @@ export function Notifications() {
 
         <div className="mt-6">
           <Typography variant="h6" color="blue-gray" className="mb-2">
-            اختر العملات المشفرة (الحد الأقصى 20)
+            البحث عن العملات المشفرة
           </Typography>
-          <div className="grid grid-cols-4 gap-2">
-            {cryptoData.map((crypto) => (
-              <Checkbox
-                key={crypto.symbol}
-                label={crypto.symbol}
-                checked={selectedCryptos.includes(crypto.symbol)}
-                onChange={() => handleCryptoSelection(crypto.symbol)}
-              />
-            ))}
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="ابحث عن العملات..."
+              value={searchTerm}
+              onChange={handleSearch}
+              icon={<Search />}
+            />
+            {searchResults.length > 0 && (
+              <div className="absolute z-10 w-full bg-white shadow-md rounded-b-lg">
+                {searchResults.map((crypto) => (
+                  <div
+                    key={crypto.symbol}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleCryptoSelection(crypto)}
+                  >
+                    {crypto.symbol}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -186,27 +224,33 @@ export function Notifications() {
           <Typography variant="h6" color="blue-gray" className="mb-2">
             العملات المختارة
           </Typography>
-          <table className="w-full min-w-max table-auto text-left">
-            <thead>
-              <tr>
-                {["الرمز", "السعر الأخير", "نسبة التغير", "الحجم"].map((head) => (
-                  <th key={head} className="border-b border-blue-gray-100 bg-blue-gray-50 p-4">
-                    {head}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {cryptoData.filter(crypto => selectedCryptos.includes(crypto.symbol)).map(({ symbol, lastPrice, priceChangePercent, volume }) => (
-                <tr key={symbol} className="even:bg-blue-gray-50/50">
-                  <td className="p-4">{symbol}</td>
-                  <td className="p-4">{lastPrice}</td>
-                  <td className="p-4">{priceChangePercent}%</td>
-                  <td className="p-4">{volume}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="flex flex-wrap gap-2">
+            {selectedCryptos.map((crypto) => (
+              <Chip
+                key={crypto.symbol}
+                value={crypto.symbol}
+                onClose={() => removeCrypto(crypto.symbol)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <Typography variant="h6" color="blue-gray" className="mb-2">
+            قائمة العملات
+          </Typography>
+          <div className="h-64 overflow-auto">
+            {cryptoData.map((crypto, index) => (
+              <div
+                key={crypto.symbol}
+                className="p-2 hover:bg-gray-100 cursor-pointer"
+                onClick={() => handleCryptoSelection(crypto)}
+                ref={index === cryptoData.length - 1 ? lastCryptoElementRef : null}
+              >
+                {crypto.symbol} - {crypto.lastPrice}
+              </div>
+            ))}
+          </div>
         </div>
       </CardBody>
       <CardFooter className="pt-0">
