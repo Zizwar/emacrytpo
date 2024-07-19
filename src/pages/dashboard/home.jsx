@@ -1,270 +1,292 @@
-import React from "react";
-import {
-  Typography,
-  Card,
-  CardHeader,
-  CardBody,
-  IconButton,
-  Menu,
-  MenuHandler,
-  MenuList,
-  MenuItem,
-  Tooltip,
-  Progress,
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { 
+  Typography, Card, CardHeader, CardBody, Progress
 } from "@material-tailwind/react";
-import {
-  EllipsisVerticalIcon,
-  ArrowUpIcon,
-} from "@heroicons/react/24/outline";
-import { StatisticsChart } from "@/widgets/charts";
-import {
-  statisticsChartsData,
-  marketOverviewData,
-} from "@/data";
-import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
+import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/solid";
+import { 
+  AdvancedRealTimeChart, 
+  TechnicalAnalysis, 
+  MarketOverview, 
+  TickerTape, 
+  
+  CryptoCurrencyMarket
+} from "react-ts-tradingview-widgets";
 
+// دالة جلب بيانات أهم العملات المشفرة
+const fetchTopCryptos = async () => {
+  try {
+    const response = await axios.get('https://api.coingecko.com/api/v3/coins/markets', {
+      params: {
+        vs_currency: 'usd',
+        order: 'market_cap_desc',
+        per_page: 5,
+        page: 1,
+        sparkline: false,
+        price_change_percentage: '24h'
+      }
+    });
+    console.log('تم جلب بيانات العملات المشفرة:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('خطأ في جلب بيانات العملات المشفرة:', error);
+    return [];
+  }
+};
 
-const cryptoProjectsData = [
-  {
-    img: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png",
-    name: "بيتكوين",
-    symbol: "BTC",
-    marketCap: "$1,046,899,935,348",
-    progress: 65,
-  },
-  {
-    img: "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
-    name: "إيثيريوم",
-    symbol: "ETH",
-    marketCap: "$225,559,775,406",
-    progress: 40,
-  },
-  {
-    img: "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
-    name: "بينانس كوين",
-    symbol: "BNB",
-    marketCap: "$36,033,694,611",
-    progress: 30,
-  },
-  {
-    img: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png",
-    name: "يو إس دي كوين",
-    symbol: "USDC",
-    marketCap: "$26,169,885,690",
-    progress: 80,
-  },
-  {
-    img: "https://assets.coingecko.com/coins/images/325/small/Tether.png",
-    name: "تيثر",
-    symbol: "USDT",
-    marketCap: "$83,761,350,141",
-    progress: 70,
-  },
-];
+// دالة جلب البيانات العالمية للعملات المشفرة
+const fetchGlobalData = async () => {
+  try {
+    const response = await axios.get('https://api.coingecko.com/api/v3/global');
+    console.log('تم جلب البيانات العالمية:', response.data.data);
+    return response.data.data;
+  } catch (error) {
+    console.error('خطأ في جلب البيانات العالمية:', error);
+    return null;
+  }
+};
+
+// دالة جلب مؤشر الخوف والجشع
+const fetchFearGreedIndex = async () => {
+  try {
+    const response = await axios.get('https://api.alternative.me/fng/');
+    console.log('تم جلب مؤشر الخوف والجشع:', response.data);
+    return response.data.data[0];
+  } catch (error) {
+    console.error('خطأ في جلب مؤشر الخوف والجشع:', error);
+    return null;
+  }
+};
+
+const CryptoCard = ({ crypto }) => (
+  <Card className="w-full shadow-lg">
+    <CardBody>
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center">
+          <img src={crypto.image} alt={crypto.name} className="w-8 h-8 ml-2" />
+          <Typography variant="h6">{crypto.name}</Typography>
+        </div>
+        <Typography variant="h6">${crypto.current_price.toLocaleString()}</Typography>
+      </div>
+      <div className="flex justify-between items-center">
+        <Typography color="gray">التغير خلال 24 ساعة</Typography>
+        <Typography 
+          color={crypto.price_change_percentage_24h > 0 ? "green" : "red"}
+          className="flex items-center"
+        >
+          {crypto.price_change_percentage_24h > 0 ? (
+            <ArrowUpIcon className="h-4 w-4 ml-1" />
+          ) : (
+            <ArrowDownIcon className="h-4 w-4 ml-1" />
+          )}
+          {Math.abs(crypto.price_change_percentage_24h).toFixed(2)}%
+        </Typography>
+      </div>
+      <Progress 
+        value={Math.abs(crypto.price_change_percentage_24h)} 
+        color={crypto.price_change_percentage_24h > 0 ? "green" : "red"}
+        className="mt-2"
+      />
+    </CardBody>
+  </Card>
+);
+
+const MarketOverviewCard = ({ globalData }) => (
+  <Card className="w-full shadow-lg">
+    <CardHeader color="blue" className="p-4">
+      <Typography variant="h6" color="white">نظرة عامة على السوق</Typography>
+    </CardHeader>
+    <CardBody>
+      <div className="space-y-4">
+        <div>
+          <Typography variant="h6">إجمالي القيمة السوقية</Typography>
+          <Typography>${globalData.total_market_cap.usd.toLocaleString()}</Typography>
+        </div>
+        <div>
+          <Typography variant="h6">حجم التداول 24 ساعة</Typography>
+          <Typography>${globalData.total_volume.usd.toLocaleString()}</Typography>
+        </div>
+        <div>
+          <Typography variant="h6">هيمنة البيتكوين</Typography>
+          <Typography>{globalData.market_cap_percentage.btc.toFixed(2)}%</Typography>
+        </div>
+        <div>
+          <Typography variant="h6">عدد العملات النشطة</Typography>
+          <Typography>{globalData.active_cryptocurrencies}</Typography>
+        </div>
+        <div>
+          <Typography variant="h6">عدد الأسواق</Typography>
+          <Typography>{globalData.markets}</Typography>
+        </div>
+      </div>
+    </CardBody>
+  </Card>
+);
+
+const FearGreedCard = ({ indexData }) => (
+  <Card className="w-full shadow-lg">
+    <CardHeader color="purple" className="p-4">
+      <Typography variant="h6" color="white">مؤشر الخوف والجشع</Typography>
+    </CardHeader>
+    <CardBody>
+      <Typography variant="h4" className="text-center mb-4">{indexData.value}</Typography>
+      <Typography variant="h6" className="text-center">{indexData.value_classification}</Typography>
+      <Progress value={parseInt(indexData.value)} color="purple" className="mt-4" />
+    </CardBody>
+  </Card>
+);
+
+const ChartCard = ({ title, children }) => (
+  <Card className="w-full p-4 m-2">
+    <CardHeader color="blue" className="p-2">
+      <Typography variant="h6" color="white" className="text-right">
+        {title}
+      </Typography>
+    </CardHeader>
+    <CardBody>{children}</CardBody>
+  </Card>
+);
 
 export function Home() {
-  return (
-    <div className="mt-12 bg-gray-100 p-6 rounded-xl">
-      <Typography variant="h3" color="blue-gray" className="mb-8 text-right">
-        لوحة تحكم العملات المشفرة
-      </Typography>
-    
-      <div dir="rtl" className="mb-4 text-right grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <Card className="overflow-hidden xl:col-span-2 border border-blue-gray-100 shadow-lg">
-          <CardHeader
-            floated={false}
-            shadow={false}
-            color="transparent"
-            className="m-0 flex items-center justify-between p-6 bg-gradient-to-r from-blue-500 to-purple-500"
-          >
-            <div>
-              <Typography variant="h6" color="white" className="mb-1">
-                مشاريع العملات المشفرة
-              </Typography>
-              <Typography
-                variant="small"
-                className="flex items-center gap-1 font-normal text-blue-gray-50"
-              >
-                <CheckCircleIcon strokeWidth={3} className="h-4 w-4 text-green-300" />
-                <strong>5 عملات رئيسية</strong> في السوق
-              </Typography>
-            </div>
-            <Menu placement="left-start">
-              <MenuHandler>
-                <IconButton size="sm" variant="text" color="white">
-                  <EllipsisVerticalIcon
-                    strokeWidth={3}
-                    fill="currentColor"
-                    className="h-6 w-6"
-                  />
-                </IconButton>
-              </MenuHandler>
-              <MenuList>
-                <MenuItem>تفاصيل</MenuItem>
-                <MenuItem>تحليل</MenuItem>
-                <MenuItem>تصدير البيانات</MenuItem>
-              </MenuList>
-            </Menu>
-          </CardHeader>
-          <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
-            <table className="w-full min-w-[640px] table-auto">
-              <thead>
-                <tr>
-                  {["العملة", "الرمز", "القيمة السوقية", "التقدم"].map(
-                    (el) => (
-                      <th
-                        key={el}
-                        className="border-b border-blue-gray-50 py-3 px-6 text-right"
-                      >
-                        <Typography
-                          variant="small"
-                          className="text-[11px] font-medium uppercase text-blue-gray-400"
-                        >
-                          {el}
-                        </Typography>
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {cryptoProjectsData.map(
-                  ({ img, name, symbol, marketCap, progress }, key) => {
-                    const className = `py-3 px-5 ${
-                      key === cryptoProjectsData.length - 1
-                        ? ""
-                        : "border-b border-blue-gray-50"
-                    }`;
+  const [cryptos, setCryptos] = useState([]);
+  const [globalData, setGlobalData] = useState(null);
+  const [fearGreedIndex, setFearGreedIndex] = useState(null);
 
-                    return (
-                      <tr key={name}>
-                        <td className={className}>
-                          <div className="flex items-center gap-4">
-                            <img src={img} alt={name} className="w-8 h-8" />
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-bold"
-                            >
-                              {name}
-                            </Typography>
-                          </div>
-                        </td>
-                        <td className={className}>
-                          <Typography
-                            variant="small"
-                            className="text-xs font-medium text-blue-gray-600"
-                          >
-                            {symbol}
-                          </Typography>
-                        </td>
-                        <td className={className}>
-                          <Typography
-                            variant="small"
-                            className="text-xs font-medium text-blue-gray-600"
-                          >
-                            {marketCap}
-                          </Typography>
-                        </td>
-                        <td className={className}>
-                          <div className="w-10/12">
-                            <Typography
-                              variant="small"
-                              className="mb-1 block text-xs font-medium text-blue-gray-600"
-                            >
-                              {progress}%
-                            </Typography>
-                            <Progress
-                              value={progress}
-                              variant="gradient"
-                              color={progress > 50 ? "green" : "blue"}
-                              className="h-1"
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  }
-                )}
-              </tbody>
-            </table>
-          </CardBody>
-        </Card>
-        <Card className="border border-blue-gray-100 shadow-lg">
-          <CardHeader
-            floated={false}
-            shadow={false}
-            color="transparent"
-            className="m-0 p-6 bg-gradient-to-r from-green-400 to-cyan-500"
-          >
-            <Typography variant="h6" color="white" className="mb-2">
-              نظرة عامة على السوق
-            </Typography>
-            <Typography
-              variant="small"
-              className="flex items-center gap-1 font-normal text-blue-gray-50"
-            >
-              <ArrowUpIcon
-                strokeWidth={3}
-                className="h-3.5 w-3.5 text-green-300"
-              />
-              <strong>15%</strong> زيادة في حجم التداول
-            </Typography>
-          </CardHeader>
-          <CardBody className="pt-0">
-            {marketOverviewData.map(
-              ({ icon, color, title, description }, key) => (
-                <div key={title} className="flex items-start gap-4 py-3">
-                  <div
-                    className={`relative p-1 after:absolute after:-bottom-6 after:right-2/4 after:w-0.5 after:translate-x-2/4 after:bg-blue-gray-50 after:content-[''] ${
-                      key === marketOverviewData.length - 1
-                        ? "after:h-0"
-                        : "after:h-4/6"
-                    }`}
-                  >
-                    {React.createElement(icon, {
-                      className: `!w-5 !h-5 ${color}`,
-                    })}
-                  </div>
-                  <div>
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="block font-medium"
-                    >
-                      {title}
-                    </Typography>
-                    <Typography
-                      as="span"
-                      variant="small"
-                      className="text-xs font-medium text-blue-gray-500"
-                    >
-                      {description}
-                    </Typography>
-                  </div>
-                </div>
-              )
-            )}
-          </CardBody>
-        </Card>
+  useEffect(() => {
+    const fetchData = async () => {
+      const cryptoData = await fetchTopCryptos();
+      setCryptos(cryptoData);
+
+      const global = await fetchGlobalData();
+      setGlobalData(global);
+
+      const fgi = await fetchFearGreedIndex();
+      setFearGreedIndex(fgi);
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <div className="bg-gray-100 min-h-screen p-4 md:p-8 rtl">
+      <Typography variant="h3" className="mb-8 text-right">لوحة معلومات العملات المشفرة</Typography>
+      
+      <div className="w-full mb-8">
+        <Typography variant="h6" className="mb-2 text-right">أخبار العملات المشفرة</Typography>
+        <TickerTape colorTheme="light" displayMode="compact" locale="ar" symbols={[
+          {
+            "proName": "BITSTAMP:BTCUSD",
+            "title": "Bitcoin"
+          },
+          {
+            "proName": "BITSTAMP:ETHUSD",
+            "title": "Ethereum"
+          },
+          {
+            "proName": "BINANCE:BNBUSD",
+            "title": "Binance Coin"
+          },
+          {
+            "proName": "BINANCE:ADAUSD",
+            "title": "Cardano"
+          },
+          {
+            "proName": "BINANCE:DOGEUSD",
+            "title": "Dogecoin"
+          }
+        ]} />
       </div>
-      <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-        {statisticsChartsData.map((props) => (
-          <StatisticsChart
-            key={props.title}
-            {...props}
-            footer={
-              <Typography
-                variant="small"
-                className="flex items-center font-normal text-blue-gray-600"
-              >
-                <ClockIcon strokeWidth={2} className="h-4 w-4 text-blue-gray-400" />
-                &nbsp;{props.footer}
-              </Typography>
-            }
+
+      <div className="mb-8">
+        <ChartCard title="جدول العملات المشفرة">
+          <CryptoCurrencyMarket 
+            colorTheme="light"
+            width="100%"
+            height={400}
+            locale="ar"
           />
+        </ChartCard>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        {cryptos.map((crypto) => (
+          <CryptoCard key={crypto.id} crypto={crypto} />
         ))}
       </div>
-    </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        {globalData && <MarketOverviewCard globalData={globalData} />}
+        {fearGreedIndex && <FearGreedCard indexData={fearGreedIndex} />}
+      </div>
+
+      <div className="mb-8">
+        <ChartCard title="الرسم البياني للبيتكوين">
+          <div style={{ height: '60vh', minHeight: '400px' }}>
+            <AdvancedRealTimeChart 
+              theme="light"
+              symbol="BINANCE:BTCUSDT"
+              interval="D"
+              timezone="Etc/UTC"
+              style="1"
+              locale="ar"
+              toolbar_bg="#f1f3f6"
+              enable_publishing={false}
+              hide_top_toolbar={false}
+              allow_symbol_change={true}
+              container_id="tradingview_chart"
+              height="100%"
+              width="100%"
+            />
+          </div>
+        </ChartCard>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <ChartCard title="التحليل الفني">
+          <TechnicalAnalysis
+            colorTheme="light"
+            symbol="BINANCE:BTCUSDT"
+            showIntervalTabs={true}
+            locale="ar"
+            width="100%"
+            height={400}
+          />
+        </ChartCard>
+
+        <ChartCard title="نظرة عامة على سوق العملات المشفرة">
+          <MarketOverview
+            colorTheme="light"
+            height={400}
+            width="100%"
+            showFloatingTooltip
+            locale="ar"
+            tabs={[
+              {
+                title: "العملات المشفرة",
+                symbols: [
+                  {
+                    s: "BINANCE:BTCUSDT"
+                  },
+                  {
+                    s: "BINANCE:ETHUSDT"
+                  },
+                  {
+                    s: "BINANCE:BNBUSD"
+                  },
+                  {
+                    s: "BINANCE:ADAUSDT"
+                  },
+                  {
+                    s: "BINANCE:DOGEUSDT"
+                  }
+                ]
+              }
+            ]}
+          />
+        </ChartCard>
+      </div>
+     </div>
   );
 }
+
+export default Home;
