@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
@@ -28,6 +29,8 @@ export function Notifications () {
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
   const observerRef = useRef(null);
+  const allCryptoDataRef = useRef([]);
+
   const lastCryptoElementRef = useCallback(node => {
     if (observerRef.current) observerRef.current.disconnect();
     observerRef.current = new IntersectionObserver(entries => {
@@ -81,10 +84,10 @@ export function Notifications () {
       const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
       const data = await response.json();
       const sortedData = data.sort((a, b) => parseFloat(b.volume) - parseFloat(a.volume));
+      allCryptoDataRef.current = sortedData;
       const paginatedData = sortedData.slice((page - 1) * 10, page * 10);
       setCryptoData(prevData => {
         const newData = [...prevData, ...paginatedData];
-       
         return Array.from(new Set(newData.map(crypto => crypto.symbol)))
           .map(symbol => newData.find(crypto => crypto.symbol === symbol));
       });
@@ -94,6 +97,7 @@ export function Notifications () {
       setErrorMessage('حدث خطأ أثناء جلب بيانات العملات المشفرة.');
     }
   };
+
   const toggleListening = () => {
     setErrorMessage('');
     if (isListening) {
@@ -140,7 +144,7 @@ export function Notifications () {
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
-    const results = cryptoData.filter(crypto => 
+    const results = allCryptoDataRef.current.filter(crypto => 
       crypto.symbol.toLowerCase().includes(term)
     ).slice(0, 10);
     setSearchResults(results);
@@ -251,7 +255,7 @@ export function Notifications () {
                 key={crypto.symbol}
                 className="p-2 hover:bg-gray-100 cursor-pointer"
                 onClick={() => handleCryptoSelection(crypto)}
-                ref={index === cryptoData.length - 1 ? lastCryptoElementRef : null}
+       ref={index === cryptoData.length - 1 ? lastCryptoElementRef : null}
               >
                 {crypto.symbol} - {crypto.lastPrice}
               </div>
@@ -277,3 +281,4 @@ export function Notifications () {
     </Card>
   );
 }
+         
