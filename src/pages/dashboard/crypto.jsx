@@ -8,7 +8,7 @@ const CoinGeckoAPI = axios.create({
   baseURL: 'https://api.coingecko.com/api/v3',
 });
 
-export function CryptoDashboard() {
+export function Crypto() {
   const [searchTerm, setSearchTerm] = useState('');
   const [coinData, setCoinData] = useState(null);
   const [chartData, setChartData] = useState([]);
@@ -185,4 +185,4 @@ export function CryptoDashboard() {
   );
 }
 
-export default CryptoDashboard;
+Crypto;
