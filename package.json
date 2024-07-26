@@ -25,7 +25,8 @@
     "react-router-dom": "6.17.0",
     "react-ts-tradingview-widgets": "^1.2.5",
     "recharts": "^2.12.7",
-    "technicalindicators": "^3.1.0"
+    "technicalindicators": "^3.1.0",
+     "react-markdown": "^9.0.1"
   },
   "devDependencies": {
     "@types/react": "18.2.31",
