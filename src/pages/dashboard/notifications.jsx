@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
@@ -9,8 +8,10 @@ import {
   Button,
   Textarea,
   Chip,
+  Spinner,
 } from "@material-tailwind/react";
 import { Mic as Microphone, StopCircle, Speaker, Send, Search } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 
 export function Notifications () {
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -25,6 +26,7 @@ export function Notifications () {
   const [searchResults, setSearchResults] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
@@ -109,6 +111,7 @@ export function Notifications () {
   };
 
   const handleSubmit = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch('/api/gpt', {
         method: 'POST',
@@ -126,6 +129,7 @@ export function Notifications () {
       console.error('Error:', error);
       setErrorMessage('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
     }
+    setIsLoading(false);
   };
 
   const speakResponse = () => {
@@ -200,6 +204,42 @@ export function Notifications () {
           <Button onClick={handleSubmit} fullWidth>
             <Send className="mr-2 h-5 w-5" /> إرسال
           </Button>
+          {isLoading && (
+            <div className="flex justify-center mt-4">
+              <Spinner className="h-6 w-6" />
+            </div>
+          )}
+        </div>
+        <CardFooter className="pt-0">
+        {response && (
+          <div  dir="rtl" className="mt-4 p-4 bg-gray-100 rounded-lg relative">
+            <ReactMarkdown>{response}</ReactMarkdown>
+            <Button
+              size="sm"
+              color={isSpeaking ? "red" : "green"}
+              className="!absolute right-2 top-2"
+              onClick={speakResponse}
+            >
+              <Speaker />
+            </Button>
+          </div>
+        )}
+      </CardFooter>
+    
+
+        <div className="mt-6">
+          <Typography variant="h6" color="blue-gray" className="mb-2">
+            العملات المختارة
+          </Typography>
+          <div className="flex flex-wrap gap-2">
+            {selectedCryptos.map((crypto) => (
+              <Chip
+                key={crypto.symbol}
+                value={crypto.symbol}
+                onClose={() => removeCrypto(crypto.symbol)}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="mt-6">
@@ -230,20 +270,6 @@ export function Notifications () {
           </div>
         </div>
 
-        <div className="mt-6">
-          <Typography variant="h6" color="blue-gray" className="mb-2">
-            العملات المختارة
-          </Typography>
-          <div className="flex flex-wrap gap-2">
-            {selectedCryptos.map((crypto) => (
-              <Chip
-                key={crypto.symbol}
-                value={crypto.symbol}
-                onClose={() => removeCrypto(crypto.symbol)}
-              />
-            ))}
-          </div>
-        </div>
 
         <div className="mt-6">
           <Typography variant="h6" color="blue-gray" className="mb-2">
@@ -255,7 +281,7 @@ export function Notifications () {
                 key={crypto.symbol}
                 className="p-2 hover:bg-gray-100 cursor-pointer"
                 onClick={() => handleCryptoSelection(crypto)}
-       ref={index === cryptoData.length - 1 ? lastCryptoElementRef : null}
+                ref={index === cryptoData.length - 1 ? lastCryptoElementRef : null}
               >
                 {crypto.symbol} - {crypto.lastPrice}
               </div>
@@ -263,22 +289,7 @@ export function Notifications () {
           </div>
         </div>
       </CardBody>
-      <CardFooter className="pt-0">
-        {response && (
-          <div className="mt-4 p-4 bg-gray-100 rounded-lg relative">
-            <Typography>{response}</Typography>
-            <Button
-              size="sm"
-              color={isSpeaking ? "red" : "green"}
-              className="!absolute right-2 top-2"
-              onClick={speakResponse}
-            >
-              <Speaker />
-            </Button>
-          </div>
-        )}
-      </CardFooter>
+    
     </Card>
   );
 }
-         
