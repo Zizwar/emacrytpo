@@ -12,7 +12,7 @@ import {
   ArrowRightOnRectangleIcon,
   UserPlusIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications, Crypto, SignalsDisplay, Scanner, Views, News, SignalCreator } from "@/pages/dashboard";
+import { Home, Profile, Tables, Ai, Crypto, SignalsDisplay, Scanner, Views, News, SignalCreator, Mojo } from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 
 const iconStyle = (color) => ({
@@ -61,7 +61,7 @@ export const routes = [
       },
       {
         icon: <QrCodeIcon {...iconStyle("pink-500")} />,
-        name: "المسح الضوئي",
+        name: "  متقدم",
         path: "/scanner",
         element: <Scanner />,
       },
@@ -70,18 +70,18 @@ export const routes = [
         name: "الملف الشخصي",
         path: "/profile",
         element: <Profile />,
-      },
+      },/*
       {
         icon: <TableCellsIcon {...iconStyle("orange-500")} />,
         name: "الجداول",
         path: "/tables",
         element: <Tables />,
-      },
+      },*/
       {
-        icon: <BellIcon {...iconStyle("cyan-500")} />,
-        name: "الإشعارات",
-        path: "/notifications",
-        element: <Notifications />,
+        icon: <SignalIcon {...iconStyle("cyan-500")} />,
+        name: "تداول بذكاء",
+        path: "/ai",
+        element: <Ai />,
       },
     ],
   },
@@ -100,6 +100,12 @@ export const routes = [
         name: "التسجيل",
         path: "/sign-up",
         element: <SignUp />,
+      },
+      {
+        icon: <NewspaperIcon {...iconStyle("emerald-500")} />,
+        name: "Mojo",
+        path: "/mojo",
+        element: <Mojo />,
       },
     ],
   },

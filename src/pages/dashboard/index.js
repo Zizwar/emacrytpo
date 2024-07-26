@@ -1,7 +1,7 @@
 export * from "@/pages/dashboard/home";
 export * from "@/pages/dashboard/profile";
 export * from "@/pages/dashboard/tables";
-export * from "@/pages/dashboard/notifications";
+export * from "@/pages/dashboard/ai";
 export * from "@/pages/dashboard/crypto";
 export * from "@/pages/dashboard/showSignals";
 export * from "@/pages/dashboard/scanner";
@@ -9,3 +9,4 @@ export * from "@/pages/dashboard/scanner";
 export * from "@/pages/dashboard/views";
 export * from "@/pages/dashboard/news";
 export * from "@/pages/dashboard/signal-creator";
+export * from "@/pages/dashboard/mojo";
