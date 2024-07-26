@@ -71,16 +71,18 @@ export const routes = [
         path: "/profile",
         element: <Profile />,
       },
+      /*
       {
         icon: <TableCellsIcon {...iconStyle("orange-500")} />,
         name: "الجداول",
         path: "/tables",
         element: <Tables />,
       },
+      */
       {
-        icon: <BellIcon {...iconStyle("cyan-500")} />,
-        name: "الإشعارات",
-        path: "/notifications",
+             icon: <SignalIcon {...iconStyle("cyan-500")} />,
+        name: "تداول بذكاء",
+        path: "/ai",
         element: <Notifications />,
       },
     ],
